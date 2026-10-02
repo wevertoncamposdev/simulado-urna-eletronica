@@ -1,0 +1,28 @@
+[
+  {
+    "id": "df4201d4-f501-4049-84dd-93af5c2be407",
+    "name": "Eleição Demo 2026",
+    "year": 2026,
+    "positions": [
+      "PRESIDENTE",
+      "GOVERNADOR",
+      "SENADOR"
+    ],
+    "status": "FINISHED",
+    "createdAt": "2026-10-02T01:59:36.667Z",
+    "startedAt": "2026-10-02T01:59:36.750Z",
+    "finishedAt": "2026-10-02T01:59:37.009Z"
+  },
+  {
+    "id": "765c20ea-ee32-46cf-9b57-41b248ffeb17",
+    "name": "Eleição em Casa 2026",
+    "year": 2026,
+    "positions": [
+      "PRESIDENTE"
+    ],
+    "status": "FINISHED",
+    "createdAt": "2026-10-02T02:00:35.041Z",
+    "startedAt": "2026-10-02T02:03:26.501Z",
+    "finishedAt": "2026-10-02T02:04:32.506Z"
+  }
+]

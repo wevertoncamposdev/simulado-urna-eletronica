@@ -1,0 +1,123 @@
+[
+  {
+    "id": "e94fac86-5dd2-45b0-b26c-0f4c9ef80004",
+    "sessionId": "df4201d4-f501-4049-84dd-93af5c2be407",
+    "partyId": "7bf16b2f-5851-4951-a470-6a0e4fed2a1c",
+    "position": "PRESIDENTE",
+    "name": "João Silva",
+    "number": "10",
+    "photo": null,
+    "status": "ACTIVE",
+    "createdAt": "2026-10-02T01:59:36.675Z"
+  },
+  {
+    "id": "5370bc39-d2fc-4791-a74d-0c6e7f75e620",
+    "sessionId": "df4201d4-f501-4049-84dd-93af5c2be407",
+    "partyId": "ba001ce2-482b-4f0e-a00e-341b08aa6665",
+    "position": "PRESIDENTE",
+    "name": "Maria Souza",
+    "number": "20",
+    "photo": null,
+    "status": "ACTIVE",
+    "createdAt": "2026-10-02T01:59:36.682Z"
+  },
+  {
+    "id": "f78804eb-f6e1-4470-899b-ee01e1d8de6e",
+    "sessionId": "df4201d4-f501-4049-84dd-93af5c2be407",
+    "partyId": "2e916360-b7f8-43ff-8965-acd162f73219",
+    "position": "PRESIDENTE",
+    "name": "Carlos Oliveira",
+    "number": "30",
+    "photo": null,
+    "status": "ACTIVE",
+    "createdAt": "2026-10-02T01:59:36.692Z"
+  },
+  {
+    "id": "62bafb36-fb63-4b5b-bf8a-c38840e05989",
+    "sessionId": "df4201d4-f501-4049-84dd-93af5c2be407",
+    "partyId": "7bf16b2f-5851-4951-a470-6a0e4fed2a1c",
+    "position": "GOVERNADOR",
+    "name": "Ana Santos",
+    "number": "11",
+    "photo": null,
+    "status": "ACTIVE",
+    "createdAt": "2026-10-02T01:59:36.700Z"
+  },
+  {
+    "id": "cfddac12-52b3-4fb2-b62f-25f1d40b0233",
+    "sessionId": "df4201d4-f501-4049-84dd-93af5c2be407",
+    "partyId": "ba001ce2-482b-4f0e-a00e-341b08aa6665",
+    "position": "GOVERNADOR",
+    "name": "Pedro Lima",
+    "number": "22",
+    "photo": null,
+    "status": "ACTIVE",
+    "createdAt": "2026-10-02T01:59:36.708Z"
+  },
+  {
+    "id": "8bb54ef5-842d-4056-a9d0-17549f166964",
+    "sessionId": "df4201d4-f501-4049-84dd-93af5c2be407",
+    "partyId": "2e916360-b7f8-43ff-8965-acd162f73219",
+    "position": "GOVERNADOR",
+    "name": "Lúcia Ramos",
+    "number": "33",
+    "photo": null,
+    "status": "ACTIVE",
+    "createdAt": "2026-10-02T01:59:36.715Z"
+  },
+  {
+    "id": "7118fbf5-28c6-41fb-8b53-93284ddb2dbf",
+    "sessionId": "df4201d4-f501-4049-84dd-93af5c2be407",
+    "partyId": "7bf16b2f-5851-4951-a470-6a0e4fed2a1c",
+    "position": "SENADOR",
+    "name": "Rafael Costa",
+    "number": "101",
+    "photo": null,
+    "status": "ACTIVE",
+    "createdAt": "2026-10-02T01:59:36.725Z"
+  },
+  {
+    "id": "e5281007-1294-4be4-b871-f0421ab0098b",
+    "sessionId": "df4201d4-f501-4049-84dd-93af5c2be407",
+    "partyId": "ba001ce2-482b-4f0e-a00e-341b08aa6665",
+    "position": "SENADOR",
+    "name": "Beatriz Alves",
+    "number": "202",
+    "photo": null,
+    "status": "ACTIVE",
+    "createdAt": "2026-10-02T01:59:36.735Z"
+  },
+  {
+    "id": "7e54ef02-a713-4b3a-be7b-fa5934488fb7",
+    "sessionId": "df4201d4-f501-4049-84dd-93af5c2be407",
+    "partyId": "2e916360-b7f8-43ff-8965-acd162f73219",
+    "position": "SENADOR",
+    "name": "Tiago Mendes",
+    "number": "303",
+    "photo": null,
+    "status": "ACTIVE",
+    "createdAt": "2026-10-02T01:59:36.743Z"
+  },
+  {
+    "id": "ddac257e-7238-49c9-ac16-e1ac3c92ef18",
+    "sessionId": "765c20ea-ee32-46cf-9b57-41b248ffeb17",
+    "partyId": "7bf16b2f-5851-4951-a470-6a0e4fed2a1c",
+    "position": "PRESIDENTE",
+    "name": "Caleb",
+    "number": "10",
+    "photo": "/photos/d39ed088-2662-44c5-a3b9-c2b63416a115.jpg",
+    "status": "ACTIVE",
+    "createdAt": "2026-10-02T02:01:31.106Z"
+  },
+  {
+    "id": "0a87c191-feb4-4f05-bbe8-655cb1fb3d05",
+    "sessionId": "765c20ea-ee32-46cf-9b57-41b248ffeb17",
+    "partyId": "ba001ce2-482b-4f0e-a00e-341b08aa6665",
+    "position": "PRESIDENTE",
+    "name": "Pai",
+    "number": "15",
+    "photo": null,
+    "status": "ACTIVE",
+    "createdAt": "2026-10-02T02:03:10.016Z"
+  }
+]

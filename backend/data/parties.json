@@ -1,0 +1,26 @@
+[
+  {
+    "id": "7bf16b2f-5851-4951-a470-6a0e4fed2a1c",
+    "name": "Partido ABC",
+    "acronym": "ABC",
+    "number": 10,
+    "status": "ACTIVE",
+    "createdAt": "2026-10-02T01:59:36.650Z"
+  },
+  {
+    "id": "ba001ce2-482b-4f0e-a00e-341b08aa6665",
+    "name": "Partido XYZ",
+    "acronym": "XYZ",
+    "number": 20,
+    "status": "ACTIVE",
+    "createdAt": "2026-10-02T01:59:36.656Z"
+  },
+  {
+    "id": "2e916360-b7f8-43ff-8965-acd162f73219",
+    "name": "Partido DEMO",
+    "acronym": "DEMO",
+    "number": 30,
+    "status": "ACTIVE",
+    "createdAt": "2026-10-02T01:59:36.661Z"
+  }
+]
