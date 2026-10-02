@@ -2,27 +2,27 @@ import { sessionService } from '../services/session.service.js';
 import { sendSuccess } from '../utils/http.js';
 
 export const sessionController = {
-  async list({ res }) {
-    sendSuccess(res, await sessionService.list());
+  async list({ res, userId }) {
+    sendSuccess(res, await sessionService.list(userId));
   },
 
-  async get({ res, params }) {
-    sendSuccess(res, await sessionService.getById(params.id));
+  async get({ res, params, userId }) {
+    sendSuccess(res, await sessionService.getById(params.id, userId));
   },
 
-  async create({ res, body }) {
-    sendSuccess(res, await sessionService.create(body), 201);
+  async create({ res, body, userId }) {
+    sendSuccess(res, await sessionService.create(body, userId), 201);
   },
 
-  async update({ res, params, body }) {
-    sendSuccess(res, await sessionService.update(params.id, body));
+  async update({ res, params, body, userId }) {
+    sendSuccess(res, await sessionService.update(params.id, body, userId));
   },
 
-  async open({ res, params }) {
-    sendSuccess(res, await sessionService.open(params.id));
+  async open({ res, params, userId }) {
+    sendSuccess(res, await sessionService.open(params.id, userId));
   },
 
-  async finish({ res, params }) {
-    sendSuccess(res, await sessionService.finish(params.id));
+  async finish({ res, params, userId }) {
+    sendSuccess(res, await sessionService.finish(params.id, userId));
   },
 };

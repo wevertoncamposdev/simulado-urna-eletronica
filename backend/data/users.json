@@ -1,0 +1,16 @@
+[
+  {
+    "id": "48edbed3-71f0-44f3-b4a5-82ea7b693f42",
+    "name": "Weverton Campos",
+    "email": "wcmcampos@hotmail.com",
+    "passwordHash": "7f3feb510538fd075097f5807cb8a9b7:46fc91d0322c10d2e7ab912610338709dc00c0fbc2b95f609999c2b112df212a41b8211edc6e0451912acf67558b0b25f5d34d314e6334b2f5992248f3525e31",
+    "createdAt": "2026-10-02T15:25:27.439Z"
+  },
+  {
+    "id": "ceb14c28-9c91-4ee9-8954-80d70714422f",
+    "name": "Weverton",
+    "email": "wevertoncamposdev@gmail.com",
+    "passwordHash": "464648a73300ac8c1e42e2a49d3056e7:326a539e40f67eb9ad9243b3345b58f093883c05a6454c74a95da6f6d608224147ed0414c6fe00e36d0428ec8e7e8f3d46864d2cc14cbf3ba4a3bfbc0fb1ef80",
+    "createdAt": "2026-10-02T17:47:09.086Z"
+  }
+]

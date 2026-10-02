@@ -1,20 +1,26 @@
 import { NavLink } from 'react-router-dom';
-import { BarChart3, ClipboardList, Flag, LayoutDashboard, ShieldCheck, Users, Vote } from 'lucide-react';
+import { BarChart3, BookOpen, Briefcase, ClipboardList, Flag, History, IdCard, LayoutDashboard, ShieldCheck, Users, Vote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard },
   { label: 'Eleições', to: '/sessoes', icon: ClipboardList },
+  { label: 'Cargos', to: '/cargos', icon: Briefcase },
   { label: 'Partidos', to: '/partidos', icon: Flag },
+  { label: 'Pessoas', to: '/pessoas', icon: IdCard },
   { label: 'Candidatos', to: '/candidatos', icon: Users },
   { label: 'Votação', to: '/votacao', icon: Vote },
   { label: 'Resultados', to: '/resultados', icon: BarChart3 },
   { label: 'Auditoria', to: '/auditoria', icon: ShieldCheck },
+  { label: 'Sistema eleitoral', to: '/sistema-eleitoral', icon: BookOpen },
+  { label: 'Linha do tempo', to: '/linha-do-tempo', icon: History },
 ];
 
 const itemClass = 'flex items-center gap-3 rounded-md px-3 py-2 text-sm';
 
-export function Sidebar() {
+export function Sidebar({ collapsed }) {
+  if (collapsed) return null;
+
   return (
     <aside className="hidden w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
       <div className="px-5 py-5 text-base font-semibold text-white">Simulador de Eleição</div>

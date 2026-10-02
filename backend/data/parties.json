@@ -5,7 +5,8 @@
     "acronym": "ABC",
     "number": 10,
     "status": "ACTIVE",
-    "createdAt": "2026-10-02T01:59:36.650Z"
+    "createdAt": "2026-10-02T01:59:36.000Z",
+    "userId": "48edbed3-71f0-44f3-b4a5-82ea7b693f42"
   },
   {
     "id": "ba001ce2-482b-4f0e-a00e-341b08aa6665",
@@ -13,7 +14,8 @@
     "acronym": "XYZ",
     "number": 20,
     "status": "ACTIVE",
-    "createdAt": "2026-10-02T01:59:36.656Z"
+    "createdAt": "2026-10-02T01:59:36.000Z",
+    "userId": "48edbed3-71f0-44f3-b4a5-82ea7b693f42"
   },
   {
     "id": "2e916360-b7f8-43ff-8965-acd162f73219",
@@ -21,6 +23,7 @@
     "acronym": "DEMO",
     "number": 30,
     "status": "ACTIVE",
-    "createdAt": "2026-10-02T01:59:36.661Z"
+    "createdAt": "2026-10-02T01:59:36.000Z",
+    "userId": "48edbed3-71f0-44f3-b4a5-82ea7b693f42"
   }
 ]

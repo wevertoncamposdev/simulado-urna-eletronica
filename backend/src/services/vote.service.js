@@ -1,9 +1,10 @@
 import { candidateRepository } from '../repositories/candidate.repository.js';
 import { partyRepository } from '../repositories/party.repository.js';
+import { personRepository } from '../repositories/person.repository.js';
+import { positionRepository } from '../repositories/position.repository.js';
 import { sessionRepository } from '../repositories/session.repository.js';
 import { voteRepository } from '../repositories/vote.repository.js';
 import { CANDIDATE_STATUS } from '../rules/candidate-rules.js';
-import { getPositionRule } from '../rules/position-rules.js';
 import { SESSION_STATUS } from '../rules/session-rules.js';
 import { VOTE_TYPE } from '../rules/vote-rules.js';
 import { badRequest, conflict, notFound } from '../utils/errors.js';
@@ -12,16 +13,16 @@ import { isPlainObject } from '../utils/object.js';
 
 // ---------- validações de campo ----------
 
-async function requireSession(sessionId) {
+async function requireSession(sessionId, userId) {
   if (!sessionId) throw badRequest('VOTE_SESSION_REQUIRED', 'Informe a sessão da votação.');
   const session = await sessionRepository.findById(sessionId);
-  if (!session) throw badRequest('VOTE_SESSION_NOT_FOUND', 'Sessão não encontrada.');
+  if (!session || session.userId !== userId) throw badRequest('VOTE_SESSION_NOT_FOUND', 'Sessão não encontrada.');
   return session;
 }
 
-function requirePositionRule(session, code) {
+async function requirePositionRule(session, code, userId) {
   if (!code) throw badRequest('VOTE_POSITION_REQUIRED', 'Informe o cargo da votação.');
-  const rule = getPositionRule(code);
+  const rule = await positionRepository.findByCode(code, userId);
   if (!rule) throw badRequest('VOTE_POSITION_INVALID', 'Cargo inválido.');
   if (!session.positions.includes(code)) {
     throw badRequest('VOTE_POSITION_NOT_ENABLED', 'Este cargo não está habilitado nesta sessão.');
@@ -76,12 +77,15 @@ const summarizeParty = (party) =>
   party ? { name: party.name, acronym: party.acronym, number: party.number } : null;
 
 async function summarizeCandidate(candidate) {
-  const party = await partyRepository.findById(candidate.partyId);
+  const [party, person] = await Promise.all([
+    partyRepository.findById(candidate.partyId),
+    personRepository.findById(candidate.personId),
+  ]);
   return {
     id: candidate.id,
-    name: candidate.name,
+    name: person?.name ?? null,
     number: candidate.number,
-    photo: candidate.photo,
+    photo: person?.photo ?? null,
     position: candidate.position,
     party: summarizeParty(party),
   };
@@ -129,9 +133,9 @@ async function resolveChoice(session, data, positionRule) {
 // ---------- serviço ----------
 
 export const voteService = {
-  async lookup(query = {}) {
-    const session = await requireSession(query.sessionId);
-    const positionRule = requirePositionRule(session, query.position);
+  async lookup(query = {}, userId) {
+    const session = await requireSession(query.sessionId, userId);
+    const positionRule = await requirePositionRule(session, query.position, userId);
     const number = requireTypedNumber(query.number, positionRule);
 
     const candidate = await candidateRepository.findByBallotNumber(session.id, query.position, number);
@@ -141,11 +145,11 @@ export const voteService = {
     return { status: 'FOUND', candidate: await summarizeCandidate(candidate) };
   },
 
-  async create(input) {
+  async create(input, userId) {
     const data = isPlainObject(input) ? input : {};
 
-    const session = await requireSession(data.sessionId);
-    const positionRule = requirePositionRule(session, data.position);
+    const session = await requireSession(data.sessionId, userId);
+    const positionRule = await requirePositionRule(session, data.position, userId);
     requireSessionOpen(session);
     requireType(data.type);
     requireConfirmed(data.confirmed);
@@ -168,6 +172,7 @@ export const voteService = {
 
       const voteData = {
         sessionId: session.id,
+        userId,
         position: data.position,
         candidateId: choice.candidateId,
         candidateNumber: choice.candidateNumber,

@@ -1,9 +1,10 @@
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CandidateAvatar } from '@/components/candidates/CandidateAvatar';
 import { formatNumber } from '@/lib/format';
 
-function CandidateRow({ candidate, rank, isWinner, maxVotes }) {
+function CandidateRow({ candidate, rank, isWinner, inRunoff, maxVotes }) {
   const barWidth = maxVotes > 0 ? (candidate.votes / maxVotes) * 100 : 0;
   return (
     <div className="flex flex-col gap-1.5 py-3">
@@ -14,6 +15,7 @@ function CandidateRow({ candidate, rank, isWinner, maxVotes }) {
           <p className="flex items-center gap-2 truncate text-sm font-medium">
             {candidate.name}
             {isWinner && <Badge variant="success">Eleito</Badge>}
+            {inRunoff && <Badge variant="dark">2º turno</Badge>}
             {candidate.status === 'INACTIVE' && <Badge>Inativo</Badge>}
           </p>
           <p className="truncate text-xs text-muted-foreground">
@@ -33,10 +35,15 @@ function CandidateRow({ candidate, rank, isWinner, maxVotes }) {
 }
 
 // Apuração de um cargo: ranking por votos válidos, com brancos/nulos à parte (não
-// entram na disputa, seguindo a convenção eleitoral).
+// entram na disputa, seguindo a convenção eleitoral). Em cargo com 2º turno, se
+// ninguém alcança maioria absoluta, mostra quem disputa a segunda rodada em vez
+// de declarar um vencedor.
 export function PositionResult({ result }) {
-  const { label, candidates, totals, winners } = result;
+  const { label, candidates, totals, winners, runoff } = result;
   const maxVotes = candidates[0]?.votes ?? 0;
+  const runoffCandidates = runoff
+    ? candidates.filter((c) => runoff.candidateIds.includes(c.id))
+    : [];
 
   return (
     <Card>
@@ -44,6 +51,15 @@ export function PositionResult({ result }) {
         <CardTitle>{label}</CardTitle>
       </CardHeader>
       <CardContent>
+        {runoff && (
+          <Alert className="mb-3">
+            <AlertDescription>
+              Ninguém alcançou maioria absoluta dos votos válidos (mais de 50%). Vai para o 2º
+              turno: <strong>{runoffCandidates.map((c) => c.name).join(' × ')}</strong>.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="divide-y">
           {candidates.map((candidate, index) => (
             <CandidateRow
@@ -51,6 +67,7 @@ export function PositionResult({ result }) {
               candidate={candidate}
               rank={index + 1}
               isWinner={winners.includes(candidate.id)}
+              inRunoff={runoff ? runoff.candidateIds.includes(candidate.id) : false}
               maxVotes={maxVotes}
             />
           ))}

@@ -4,7 +4,7 @@ const collection = createCollection('sessions');
 
 // Contrato do repository: se um dia virar SQLite/PostgreSQL, estes métodos continuam iguais.
 export const sessionRepository = {
-  findAll: () => collection.findAll(),
+  findAllForUser: (userId) => collection.findWhere((record) => record.userId === userId),
   findById: (id) => collection.findById(id),
   create: (data) => collection.insert(data),
   update: (id, data) => collection.update(id, data),

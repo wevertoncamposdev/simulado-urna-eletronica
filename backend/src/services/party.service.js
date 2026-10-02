@@ -47,9 +47,9 @@ function throwConflict(kind) {
   throw conflict('PARTY_ACRONYM_ALREADY_EXISTS', 'Esta sigla já está sendo utilizada por outro partido.');
 }
 
-async function findOrFail(id) {
+async function findOrFail(id, userId) {
   const party = await partyRepository.findById(id);
-  if (!party) throw notFound('PARTY_NOT_FOUND', 'Partido não encontrado.');
+  if (!party || party.userId !== userId) throw notFound('PARTY_NOT_FOUND', 'Partido não encontrado.');
   return party;
 }
 
@@ -66,9 +66,9 @@ async function save(id, changes) {
 }
 
 export const partyService = {
-  async list(filters = {}) {
+  async list(filters = {}, userId) {
     const search = normalizeText(filters.search).trim();
-    let parties = await partyRepository.findAll();
+    let parties = await partyRepository.findAllForUser(userId);
 
     if (filters.status) parties = parties.filter((p) => p.status === filters.status);
     if (search) {
@@ -77,7 +77,7 @@ export const partyService = {
       );
     }
 
-    const candidates = await candidateRepository.findAll();
+    const candidates = await candidateRepository.findAllForUser(userId);
     const countByParty = new Map();
     candidates.forEach((c) => countByParty.set(c.partyId, (countByParty.get(c.partyId) ?? 0) + 1));
 
@@ -86,14 +86,15 @@ export const partyService = {
       .map((party) => ({ ...party, candidatesCount: countByParty.get(party.id) ?? 0 }));
   },
 
-  async getById(id) {
-    return withCount(await findOrFail(id));
+  async getById(id, userId) {
+    return withCount(await findOrFail(id, userId));
   },
 
-  async create(input) {
+  async create(input, userId) {
     const data = normalizeFields(isPlainObject(input) ? input : {});
     const result = await partyRepository.create({
       ...data,
+      userId,
       status: PARTY_STATUS.ACTIVE,
       createdAt: new Date().toISOString(),
     });
@@ -101,8 +102,8 @@ export const partyService = {
     return withCount(result.record);
   },
 
-  async update(id, input) {
-    const current = await findOrFail(id);
+  async update(id, input, userId) {
+    const current = await findOrFail(id, userId);
     const changes = isPlainObject(input) ? input : {};
 
     const fields = normalizeFields({
@@ -118,8 +119,8 @@ export const partyService = {
   },
 
   // DELETE desativa em vez de apagar: candidatos e votos continuam referenciando o partido.
-  async deactivate(id) {
-    await findOrFail(id);
+  async deactivate(id, userId) {
+    await findOrFail(id, userId);
     return save(id, { status: PARTY_STATUS.INACTIVE });
   },
 };

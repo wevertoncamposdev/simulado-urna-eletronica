@@ -4,9 +4,9 @@ import { SESSION_STATUS } from '../rules/session-rules.js';
 import { conflict, notFound } from '../utils/errors.js';
 import { computeVoteHash } from '../utils/hash.js';
 
-async function findSessionOrFail(id) {
+async function findSessionOrFail(id, userId) {
   const session = await sessionRepository.findById(id);
-  if (!session) throw notFound('SESSION_NOT_FOUND', 'Sessão não encontrada.');
+  if (!session || session.userId !== userId) throw notFound('SESSION_NOT_FOUND', 'Sessão não encontrada.');
   return session;
 }
 
@@ -37,8 +37,8 @@ function verifyChain(votes) {
 }
 
 export const auditService = {
-  async getBySession(id) {
-    const session = await findSessionOrFail(id);
+  async getBySession(id, userId) {
+    const session = await findSessionOrFail(id, userId);
     requireFinished(session);
 
     const votes = await voteRepository.findWhere((v) => v.sessionId === id);

@@ -3,7 +3,7 @@
 Lista de possíveis próximos passos, fora do roteiro das 7 etapas já concluídas. Não é um
 compromisso nem uma ordem — é um banco de ideias para escolher o que estudar a seguir.
 
-## Produto e conteúdo educacional OK
+## Produto e conteúdo educacional (concluído)
 
 - **Página explicando o sistema eleitoral brasileiro**: cargos, mandatos, turno único vs. dois
   turnos, o que faz cada posição (Presidente, Governador, Senador, Deputado Federal/Estadual,
@@ -18,15 +18,20 @@ compromisso nem uma ordem — é um banco de ideias para escolher o que estudar 
 
 ## Contas e multiusuário
 
-- **Cadastro público de usuários**: autenticação (sessão ou JWT), cada pessoa com suas próprias
-  sessões/partidos/candidatos. Hoje tudo é um banco único, sem noção de "dono".
-- **Multi-tenancy**: isolar os dados por organização/conta (`tenantId` em cada coleção, ou um
+- ~~**Cadastro público de usuários**: autenticação (sessão ou JWT), cada pessoa com suas próprias
+  sessões/partidos/candidatos. Hoje tudo é um banco único, sem noção de "dono".~~ (concluído:
+  registro/login com JWT, token em `localStorage`, rotas protegidas por padrão.)
+- ~~**Multi-tenancy**: isolar os dados por organização/conta (`tenantId` em cada coleção, ou um
   `JsonDatabase`/schema por tenant se já tiver migrado para um banco real). Decidir entre
-  isolamento lógico (coluna) e físico (schema/banco separado) é a primeira escolha de design.
+  isolamento lógico (coluna) e físico (schema/banco separado) é a primeira escolha de design.~~
+  (concluído: isolamento lógico — `userId` em cada coleção, filtrado em todo repository/service;
+  cada conta nova já ganha os 7 cargos padrão.)
 - **Papéis de acesso**: admin (gerencia sessões/partidos/candidatos), mesário (opera a urna),
-  eleitor (só vota) — hoje qualquer pessoa com acesso à API faz tudo.
+  eleitor (só vota) — hoje qualquer pessoa com acesso à API faz tudo. (Ainda em aberto — por
+  enquanto, cada conta tem controle total só sobre os próprios dados, sem papéis dentro dela.)
 - **Convite/compartilhamento de eleição**: permitir que mais de uma conta administre a mesma
-  sessão (útil para simular uma comissão eleitoral).
+  sessão (útil para simular uma comissão eleitoral). (Ainda em aberto — depende de papéis de
+  acesso para fazer sentido: hoje uma sessão pertence a uma única conta.)
 
 ## Dados e infraestrutura
 

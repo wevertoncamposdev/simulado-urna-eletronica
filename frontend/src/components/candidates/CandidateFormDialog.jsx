@@ -8,18 +8,21 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { fieldOfError } from '@/lib/form-errors';
 import { api } from '@/services/api';
-import { PhotoCaptureField } from './PhotoCaptureField';
+import { CandidateAvatar } from './CandidateAvatar';
 
 const FIELD_RULES = [
   ['SESSION_NOT_FOUND', 'sessionId'],
-  ['NAME', 'name'],
+  ['PERSON', 'personId'],
   ['NUMBER', 'number'],
   ['PARTY', 'partyId'],
   ['POSITION', 'position'],
-  ['PHOTO', 'photo'],
 ];
 
-function CandidateForm({ candidate, sessions, parties, positions, defaultSessionId, onSaved, onCancel }) {
+function candidacyLabel(count) {
+  return count === 1 ? '1 candidatura' : `${count} candidaturas`;
+}
+
+function CandidateForm({ candidate, sessions, parties, positions, people, defaultSessionId, onSaved, onCancel }) {
   const editing = Boolean(candidate);
 
   // Novo candidato: só sessões em rascunho. Edição: a sessão do candidato (fixa).
@@ -34,8 +37,7 @@ function CandidateForm({ candidate, sessions, parties, positions, defaultSession
   const [position, setPosition] = useState(candidate?.position ?? '');
   const [partyId, setPartyId] = useState(candidate?.partyId ?? '');
   const [number, setNumber] = useState(candidate?.number ?? '');
-  const [name, setName] = useState(candidate?.name ?? '');
-  const [photo, setPhoto] = useState(candidate?.photo ?? '');
+  const [personId, setPersonId] = useState(candidate?.personId ?? '');
   const [status, setStatus] = useState(candidate?.status ?? 'ACTIVE');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -45,8 +47,10 @@ function CandidateForm({ candidate, sessions, parties, positions, defaultSession
   const sessionPositions = (session?.positions ?? []).map((code) => rules[code]).filter(Boolean);
   const digits = rules[position]?.digits;
   const partyOptions = parties.filter((p) => p.status === 'ACTIVE' || p.id === candidate?.partyId);
+  const selectedPerson = people.find((p) => p.id === personId)
+    ?? (editing ? { id: candidate.personId, name: candidate.name, photo: candidate.photo, candidaciesCount: null } : null);
 
-  // Depois que a votação abre, o backend só aceita mudar nome, foto e status.
+  // Depois que a votação abre, o backend só aceita mudar o status.
   const identityLocked = editing && session?.status !== 'DRAFT';
 
   const errorField = fieldOfError(error, FIELD_RULES);
@@ -67,11 +71,11 @@ function CandidateForm({ candidate, sessions, parties, positions, defaultSession
     event.preventDefault();
     setSubmitting(true);
     setError(null);
-    const payload = { sessionId, partyId, position, number, name, photo, ...(editing && { status }) };
+    const payload = { sessionId, partyId, position, number, personId, ...(editing && { status }) };
     try {
       if (editing) await api.candidates.update(candidate.id, payload);
       else await api.candidates.create(payload);
-      toast.success(editing ? 'Alterações salvas.' : 'Candidato criado.');
+      toast.success(editing ? 'Alterações salvas.' : 'Candidatura registrada.');
       onSaved();
     } catch (err) {
       setError(err);
@@ -85,7 +89,7 @@ function CandidateForm({ candidate, sessions, parties, positions, defaultSession
         <Alert variant="destructive"><AlertDescription>{error.message}</AlertDescription></Alert>
       )}
       {identityLocked && (
-        <Alert><AlertDescription>A votação já abriu: só nome, foto e status podem ser alterados.</AlertDescription></Alert>
+        <Alert><AlertDescription>A votação já abriu: só o status pode ser alterado.</AlertDescription></Alert>
       )}
 
       <FormField label="Sessão" htmlFor="candidate-session" error={fieldError('sessionId')}>
@@ -97,6 +101,28 @@ function CandidateForm({ candidate, sessions, parties, positions, defaultSession
             ))}
           </SelectContent>
         </Select>
+      </FormField>
+
+      <FormField
+        label="Pessoa"
+        htmlFor="candidate-person"
+        error={fieldError('personId')}
+        hint={people.length === 0 ? 'Cadastre uma pessoa em Pessoas antes de registrar a candidatura.' : undefined}
+      >
+        <Select value={personId} onValueChange={setPersonId} disabled={editing || people.length === 0}>
+          <SelectTrigger id="candidate-person"><SelectValue placeholder="Selecione uma pessoa" /></SelectTrigger>
+          <SelectContent>
+            {people.map((p) => (
+              <SelectItem key={p.id} value={p.id}>{p.name} ({candidacyLabel(p.candidaciesCount)})</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {selectedPerson && (
+          <div className="mt-1 flex items-center gap-3 rounded-md border bg-card p-2">
+            <CandidateAvatar name={selectedPerson.name} photo={selectedPerson.photo} />
+            <div className="text-sm font-medium">{selectedPerson.name}</div>
+          </div>
+        )}
       </FormField>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -138,19 +164,6 @@ function CandidateForm({ candidate, sessions, parties, positions, defaultSession
         </Select>
       </FormField>
 
-      <FormField label="Nome do candidato" htmlFor="candidate-name" error={fieldError('name')}>
-        <Input id="candidate-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome fictício" />
-      </FormField>
-
-      <FormField
-        label="Foto (opcional)"
-        htmlFor="candidate-photo"
-        error={fieldError('photo')}
-        hint="Um link de imagem (https://) ou uma foto tirada agora pela câmera."
-      >
-        <PhotoCaptureField id="candidate-photo" value={photo} onChange={setPhoto} disabled={submitting} />
-      </FormField>
-
       {editing && (
         <FormField label="Status" htmlFor="candidate-status" hint="Candidato inativo não recebe novos votos.">
           <Select value={status} onValueChange={setStatus}>
@@ -165,8 +178,8 @@ function CandidateForm({ candidate, sessions, parties, positions, defaultSession
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>Cancelar</Button>
-        <Button type="submit" disabled={submitting}>
-          {submitting ? 'Salvando...' : editing ? 'Salvar alterações' : 'Criar candidato'}
+        <Button type="submit" disabled={submitting || !personId}>
+          {submitting ? 'Salvando...' : editing ? 'Salvar alterações' : 'Registrar candidatura'}
         </Button>
       </div>
     </form>
@@ -179,8 +192,10 @@ export function CandidateFormDialog({ open, candidate, onOpenChange, onSaved, ..
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{candidate ? 'Editar candidato' : 'Novo candidato'}</DialogTitle>
-          <DialogDescription>O número deve ser único para o cargo dentro da sessão.</DialogDescription>
+          <DialogTitle>{candidate ? 'Editar candidatura' : 'Nova candidatura'}</DialogTitle>
+          <DialogDescription>
+            O número deve ser único para o cargo dentro da sessão. Nome e foto são do cadastro em Pessoas.
+          </DialogDescription>
         </DialogHeader>
         <CandidateForm
           candidate={candidate}

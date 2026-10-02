@@ -49,6 +49,7 @@ export default function Candidates() {
   const sessionsState = useAsync(() => api.sessions.list(), []);
   const partiesState = useAsync(() => api.parties.list(), []);
   const positionsState = useAsync(() => api.positions.list(), []);
+  const peopleState = useAsync(() => api.people.list(), []);
 
   const filter = (value) => (value === ALL ? '' : value);
   const candidatesState = useAsync(
@@ -66,13 +67,16 @@ export default function Candidates() {
   const [form, setForm] = useState({ open: false, candidate: null });
   const [deactivating, setDeactivating] = useState(null);
 
-  const setupError = sessionsState.error ?? partiesState.error ?? positionsState.error;
-  const setupReady = sessionsState.data && partiesState.data && positionsState.data;
+  const setupError = sessionsState.error ?? partiesState.error ?? positionsState.error ?? peopleState.error;
+  const setupReady = sessionsState.data && partiesState.data && positionsState.data && peopleState.data;
 
   if (setupError) {
     return (
       <div className="mx-auto max-w-5xl">
-        <ErrorState error={setupError} onRetry={() => { sessionsState.reload(); partiesState.reload(); positionsState.reload(); }} />
+        <ErrorState
+          error={setupError}
+          onRetry={() => { sessionsState.reload(); partiesState.reload(); positionsState.reload(); peopleState.reload(); }}
+        />
       </div>
     );
   }
@@ -95,9 +99,11 @@ export default function Candidates() {
   const positionOptions = (selectedSession ? positions.filter((p) => selectedSession.positions.includes(p.code)) : positions)
     .map((p) => ({ value: p.code, label: p.label }));
 
+  const people = peopleState.data;
   const hasDraftSession = sessions.some((s) => s.status === 'DRAFT');
   const hasActiveParty = parties.some((p) => p.status === 'ACTIVE');
-  const canCreate = hasDraftSession && hasActiveParty;
+  const hasAnyPerson = people.length > 0;
+  const canCreate = hasDraftSession && hasActiveParty && hasAnyPerson;
   // A sessão escolhida define o contexto da tela; só os demais filtros contam como "filtrando".
   const filtering = [position, partyId, status].some((v) => v !== ALL) || Boolean(debouncedSearch);
 
@@ -135,21 +141,23 @@ export default function Candidates() {
 
   const newButton = (
     <Button disabled={!canCreate} onClick={() => setForm({ open: true, candidate: null })}>
-      <Plus /> Novo candidato
+      <Plus /> Nova candidatura
     </Button>
   );
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6">
-      <PageHeader title="Candidatos" description="Cadastro de candidatos por sessão, cargo e partido." actions={newButton} />
+    <div className="mx-auto flex flex-col gap-6">
+      <PageHeader title="Candidatos" description="Candidaturas por sessão, cargo e partido." actions={newButton} />
 
       {!canCreate && (
         <Alert>
           <AlertDescription>
-            {!hasActiveParty ? (
-              <>Cadastre ao menos um partido ativo em <Link className="font-medium underline" to="/partidos">Partidos</Link> para registrar candidatos.</>
+            {!hasAnyPerson ? (
+              <>Cadastre ao menos uma pessoa em <Link className="font-medium underline" to="/pessoas">Pessoas</Link> para registrar uma candidatura.</>
+            ) : !hasActiveParty ? (
+              <>Cadastre ao menos um partido ativo em <Link className="font-medium underline" to="/partidos">Partidos</Link> para registrar candidaturas.</>
             ) : (
-              <>Candidatos só podem ser cadastrados em sessões em rascunho. <Link className="font-medium underline" to="/sessoes/nova">Crie uma nova sessão</Link>.</>
+              <>Candidaturas só podem ser registradas em sessões em rascunho. <Link className="font-medium underline" to="/sessoes/nova">Crie uma nova sessão</Link>.</>
             )}
           </AlertDescription>
         </Alert>
@@ -217,9 +225,10 @@ export default function Candidates() {
         sessions={sessions}
         parties={parties}
         positions={positions}
+        people={people}
         defaultSessionId={sessionId === ALL ? undefined : sessionId}
         onOpenChange={(open) => setForm((current) => ({ ...current, open }))}
-        onSaved={() => { candidatesState.reload(); sessionsState.reload(); partiesState.reload(); }}
+        onSaved={() => { candidatesState.reload(); sessionsState.reload(); partiesState.reload(); peopleState.reload(); }}
       />
       <ConfirmDialog
         open={Boolean(deactivating)}

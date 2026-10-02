@@ -4,10 +4,16 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { config } from '../backend/src/config.js';
+import { authService } from '../backend/src/services/auth.service.js';
 import { sessionService } from '../backend/src/services/session.service.js';
 import { partyService } from '../backend/src/services/party.service.js';
+import { personService } from '../backend/src/services/person.service.js';
 import { candidateService } from '../backend/src/services/candidate.service.js';
 import { voteService } from '../backend/src/services/vote.service.js';
+
+// Conta fixa só para o seed: cada conta tem seus próprios dados agora (multiusuário),
+// então o seed precisa de um "dono" — reaproveita a mesma conta a cada execução.
+const SEED_ACCOUNT = { name: 'Demo', email: 'demo@urna.local', password: 'demo12345' };
 
 const PARTIES = [
   { name: 'Partido ABC', acronym: 'ABC', number: 10 },
@@ -52,37 +58,56 @@ function parseArgs(argv) {
   };
 }
 
+// Primeira vez: cria a conta demo (e já ganha os cargos padrão). Nas próximas,
+// só entra nela — assim o seed continua idempotente mesmo rodando várias vezes.
+async function ensureSeedUser() {
+  try {
+    const { user } = await authService.register(SEED_ACCOUNT);
+    return user;
+  } catch (error) {
+    if (error.code === 'USER_EMAIL_ALREADY_EXISTS') {
+      const { user } = await authService.login({ email: SEED_ACCOUNT.email, password: SEED_ACCOUNT.password });
+      return user;
+    }
+    throw error;
+  }
+}
+
 async function clearData() {
   await fs.mkdir(config.dataPath, { recursive: true });
   await Promise.all(
-    ['sessions', 'parties', 'candidates', 'votes'].map((name) =>
+    ['sessions', 'parties', 'people', 'candidates', 'votes'].map((name) =>
       fs.writeFile(path.join(config.dataPath, `${name}.json`), '[]\n', 'utf-8'),
     ),
   );
-  // Sem candidatos antigos, as fotos que eles tinham em disco ficariam órfãs.
+  // Sem pessoas antigas, as fotos que elas tinham em disco ficariam órfãs.
   await fs.rm(path.join(config.dataPath, 'photos'), { recursive: true, force: true });
 }
 
-async function createParties() {
+async function createParties(userId) {
   const partiesByAcronym = new Map();
   for (const data of PARTIES) {
-    const party = await partyService.create(data);
+    const party = await partyService.create(data, userId);
     partiesByAcronym.set(party.acronym, party);
   }
   return partiesByAcronym;
 }
 
-async function createCandidates(sessionId, partiesByAcronym) {
+async function createCandidates(sessionId, partiesByAcronym, userId) {
   const parties = [...partiesByAcronym.values()];
   for (const [position, candidates] of Object.entries(CANDIDATES_BY_POSITION)) {
     for (const [index, candidate] of candidates.entries()) {
-      await candidateService.create({
-        sessionId,
-        partyId: parties[index % parties.length].id,
-        position,
-        name: candidate.name,
-        number: candidate.number,
-      });
+      const person = await personService.create({ name: candidate.name }, userId);
+      await candidateService.create(
+        {
+          sessionId,
+          partyId: parties[index % parties.length].id,
+          position,
+          personId: person.id,
+          number: candidate.number,
+        },
+        userId,
+      );
     }
   }
 }
@@ -99,13 +124,13 @@ function pickVote(random, position) {
   return { type: 'NULL' };
 }
 
-async function castVotes(sessionId, voters, random) {
+async function castVotes(sessionId, voters, random, userId) {
   const positions = Object.keys(CANDIDATES_BY_POSITION);
   let count = 0;
   for (let voter = 0; voter < voters; voter += 1) {
     for (const position of positions) {
       const vote = pickVote(random, position);
-      await voteService.create({ sessionId, position, confirmed: true, ...vote });
+      await voteService.create({ sessionId, position, confirmed: true, ...vote }, userId);
       count += 1;
     }
   }
@@ -116,26 +141,27 @@ async function main() {
   const { voters, finish } = parseArgs(process.argv.slice(2));
 
   await clearData();
-  const partiesByAcronym = await createParties();
+  const user = await ensureSeedUser();
+  const partiesByAcronym = await createParties(user.id);
 
-  const session = await sessionService.create({
-    name: 'Eleição Demo 2026',
-    year: 2026,
-    positions: Object.keys(CANDIDATES_BY_POSITION),
-  });
-  await createCandidates(session.id, partiesByAcronym);
-  await sessionService.open(session.id);
+  const session = await sessionService.create(
+    { name: 'Eleição Demo 2026', year: 2026, positions: Object.keys(CANDIDATES_BY_POSITION) },
+    user.id,
+  );
+  await createCandidates(session.id, partiesByAcronym, user.id);
+  await sessionService.open(session.id, user.id);
 
   let votesCast = 0;
   if (voters > 0) {
-    votesCast = await castVotes(session.id, voters, mulberry32(42));
+    votesCast = await castVotes(session.id, voters, mulberry32(42), user.id);
   }
 
   if (finish) {
-    await sessionService.finish(session.id);
+    await sessionService.finish(session.id, user.id);
   }
 
   console.log(`Dados em ${config.dataPath}`);
+  console.log(`Conta demo: ${SEED_ACCOUNT.email} / ${SEED_ACCOUNT.password}`);
   console.log(`Partidos criados: ${partiesByAcronym.size}`);
   console.log(`Sessão "${session.name}" (${session.id}), cargos: ${session.positions.join(', ')}`);
   console.log(`Candidatos criados: ${Object.values(CANDIDATES_BY_POSITION).flat().length}`);

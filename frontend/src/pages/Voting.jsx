@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, Vote } from 'lucide-react';
+import { CheckCircle2, Maximize, Minimize, Vote } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BallotCard } from '@/components/voting/BallotCard';
+import { CandidatePreviewPanel } from '@/components/voting/CandidatePreviewPanel';
 import { VoteKeypad } from '@/components/voting/VoteKeypad';
 import { EmptyState } from '@/components/layout/EmptyState';
 import { ErrorState } from '@/components/layout/ErrorState';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAsync } from '@/hooks/useAsync';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
+import { useFullscreen } from '@/hooks/useFullscreen';
+import { playBallotConfirmedSound } from '@/lib/sound';
 import { api } from '@/services/api';
 
 // Tela de votação: um cargo por vez, na ordem da sessão, até fechar a cédula.
@@ -23,6 +26,7 @@ export default function Voting() {
   const { session: currentSession, select } = useCurrentSession();
   const sessionsState = useAsync(() => api.sessions.list(), []);
   const positionsState = useAsync(() => api.positions.list(), []);
+  const { isFullscreen, toggle: toggleFullscreen } = useFullscreen();
 
   const [sessionId, setSessionId] = useState(searchParams.get('sessionId') ?? currentSession?.id ?? '');
   const [index, setIndex] = useState(0);
@@ -39,6 +43,7 @@ export default function Voting() {
   const positions = (session?.positions ?? []).map((code) => rules[code]).filter(Boolean);
   const rule = positions[index];
   const ballotDone = session && index >= positions.length;
+  const ready = rule && (blank || (digits.length === rule.digits && lookup && !lookup.loading));
 
   useEffect(() => {
     if (!rule || !session || blank || digits.length !== rule.digits) {
@@ -60,6 +65,39 @@ export default function Voting() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [digits, blank, rule?.code, session?.id]);
+
+  // Teclado físico: dígitos, Backspace/Delete para corrigir, Enter para
+  // confirmar o voto (ou avançar para o próximo eleitor quando a cédula fecha).
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (closed) return;
+      const tag = event.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || event.target.isContentEditable) return;
+
+      if (ballotDone) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          resetBallot();
+        }
+        return;
+      }
+      if (!rule || submitting) return;
+
+      if (event.key >= '0' && event.key <= '9') {
+        event.preventDefault();
+        pressDigit(event.key);
+      } else if (event.key === 'Backspace' || event.key === 'Delete') {
+        event.preventDefault();
+        clearEntry();
+      } else if (event.key === 'Enter' && ready) {
+        event.preventDefault();
+        confirmVote();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rule, submitting, ready, ballotDone, closed]);
 
   const error = sessionsState.error ?? positionsState.error;
   if (error) {
@@ -120,8 +158,6 @@ export default function Voting() {
     setBlank(true);
   }
 
-  const ready = rule && (blank || (digits.length === rule.digits && lookup && !lookup.loading));
-
   async function confirmVote() {
     const type = blank ? 'BLANK' : lookup?.result?.status === 'FOUND' ? 'VALID' : 'NULL';
     setSubmitting(true);
@@ -141,6 +177,7 @@ export default function Voting() {
       if (next >= positions.length) {
         setVotesCast((count) => count + 1);
         sessionsState.reload();
+        playBallotConfirmedSound();
       }
     } catch (err) {
       if (err.code === 'VOTE_SESSION_NOT_OPEN') {
@@ -165,6 +202,19 @@ export default function Voting() {
     </Select>
   );
 
+  const fullscreenButton = (
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      onClick={toggleFullscreen}
+      aria-label={isFullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
+      title={isFullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
+    >
+      {isFullscreen ? <Minimize /> : <Maximize />}
+    </Button>
+  );
+
   if (closed) {
     return (
       <div className="mx-auto max-w-2xl">
@@ -179,11 +229,11 @@ export default function Voting() {
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6">
+    <div className="mx-auto flex max-w-4xl flex-col gap-6">
       <PageHeader
         title="Votação"
         description={`${session.name} (${session.year})`}
-        actions={sessionPicker}
+        actions={<>{sessionPicker}{fullscreenButton}</>}
       />
 
       {positions.length === 0 ? (
@@ -208,17 +258,25 @@ export default function Voting() {
           <p className="text-center text-sm text-muted-foreground">
             Cargo {index + 1} de {positions.length}
           </p>
-          <BallotCard
-            positionLabel={rule.label}
-            digits={digits}
-            digitsRequired={rule.digits}
-            blank={blank}
-            lookup={lookup}
-          />
-          <VoteKeypad onDigit={pressDigit} onClear={clearEntry} onBlank={pressBlank} disabled={submitting} />
-          <Button className="h-12 text-base" disabled={!ready || submitting} onClick={confirmVote}>
-            {submitting ? 'Confirmando...' : 'Confirma'}
-          </Button>
+          <div className="grid gap-6 md:grid-cols-[1fr_280px]">
+            <div className="flex flex-col gap-4">
+              <BallotCard
+                positionCode={rule.code}
+                positionLabel={rule.label}
+                digits={digits}
+                digitsRequired={rule.digits}
+                blank={blank}
+              />
+              <VoteKeypad onDigit={pressDigit} onClear={clearEntry} onBlank={pressBlank} disabled={submitting} />
+              <p className="text-center text-xs text-muted-foreground">
+                Também dá para digitar no teclado do computador e confirmar com Enter.
+              </p>
+              <Button className="h-12 text-base" disabled={!ready || submitting} onClick={confirmVote}>
+                {submitting ? 'Confirmando...' : 'Confirma'}
+              </Button>
+            </div>
+            <CandidatePreviewPanel blank={blank} lookup={lookup} />
+          </div>
         </>
       )}
     </div>

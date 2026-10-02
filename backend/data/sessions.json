@@ -9,9 +9,10 @@
       "SENADOR"
     ],
     "status": "FINISHED",
-    "createdAt": "2026-10-02T01:59:36.667Z",
+    "createdAt": "2026-10-02T01:59:36.650Z",
     "startedAt": "2026-10-02T01:59:36.750Z",
-    "finishedAt": "2026-10-02T01:59:37.009Z"
+    "finishedAt": "2026-10-02T01:59:37.009Z",
+    "userId": "48edbed3-71f0-44f3-b4a5-82ea7b693f42"
   },
   {
     "id": "765c20ea-ee32-46cf-9b57-41b248ffeb17",
@@ -23,6 +24,85 @@
     "status": "FINISHED",
     "createdAt": "2026-10-02T02:00:35.041Z",
     "startedAt": "2026-10-02T02:03:26.501Z",
-    "finishedAt": "2026-10-02T02:04:32.506Z"
+    "finishedAt": "2026-10-02T02:04:32.506Z",
+    "userId": "48edbed3-71f0-44f3-b4a5-82ea7b693f42"
+  },
+  {
+    "id": "a9214843-eb42-487c-b6e9-5cc08cad28a7",
+    "name": "Nova Eleição 2026",
+    "year": 2026,
+    "positions": [
+      "REPRESENTANTE"
+    ],
+    "status": "FINISHED",
+    "createdAt": "2026-10-02T11:54:56.261Z",
+    "startedAt": "2026-10-02T13:37:50.000Z",
+    "finishedAt": "2026-10-02T14:00:30.000Z",
+    "userId": "48edbed3-71f0-44f3-b4a5-82ea7b693f42"
+  },
+  {
+    "id": "9455369f-8a62-48af-8394-240cf1e593b7",
+    "name": "Eleição 2 Turnos 2026",
+    "year": 2026,
+    "positions": [
+      "REPRESENTANTE"
+    ],
+    "status": "FINISHED",
+    "createdAt": "2026-10-02T14:19:03.641Z",
+    "startedAt": "2026-10-02T14:19:48.789Z",
+    "finishedAt": "2026-10-02T14:20:12.856Z",
+    "userId": "48edbed3-71f0-44f3-b4a5-82ea7b693f42"
+  },
+  {
+    "id": "715e52cc-3573-4d3f-a220-4edb802fab37",
+    "name": "Sessão recuperada (Governador)",
+    "year": 2026,
+    "positions": [
+      "GOVERNADOR"
+    ],
+    "status": "FINISHED",
+    "createdAt": "2026-10-02T14:34:30.000Z",
+    "startedAt": "2026-10-02T14:34:50.000Z",
+    "finishedAt": "2026-10-02T14:35:20.000Z",
+    "userId": "48edbed3-71f0-44f3-b4a5-82ea7b693f42"
+  },
+  {
+    "id": "48bde035-504f-4bad-8f91-df511d0ef9b7",
+    "name": "Sessão recuperada (Representante)",
+    "year": 2026,
+    "positions": [
+      "REPRESENTANTE"
+    ],
+    "status": "FINISHED",
+    "createdAt": "2026-10-02T14:35:40.000Z",
+    "startedAt": "2026-10-02T14:35:50.000Z",
+    "finishedAt": "2026-10-02T14:36:22.000Z",
+    "userId": "48edbed3-71f0-44f3-b4a5-82ea7b693f42"
+  },
+  {
+    "id": "402bb3b8-a8a9-400b-a5db-ad95d60c1e58",
+    "name": "Eleição Geral 2026",
+    "year": 2026,
+    "positions": [
+      "PRESIDENTE"
+    ],
+    "userId": "48edbed3-71f0-44f3-b4a5-82ea7b693f42",
+    "status": "FINISHED",
+    "createdAt": "2026-10-02T15:25:50.849Z",
+    "startedAt": "2026-10-02T17:45:54.048Z",
+    "finishedAt": "2026-10-02T17:46:16.936Z"
+  },
+  {
+    "id": "8c8e6926-c2b9-44e2-ad14-461a66af8b17",
+    "name": "Eleição Geral 2026 - 2º turno",
+    "year": 2026,
+    "positions": [
+      "PRESIDENTE"
+    ],
+    "userId": "48edbed3-71f0-44f3-b4a5-82ea7b693f42",
+    "status": "FINISHED",
+    "createdAt": "2026-10-02T17:46:23.528Z",
+    "startedAt": "2026-10-02T17:46:26.834Z",
+    "finishedAt": "2026-10-02T17:46:43.846Z"
   }
 ]

@@ -1,4 +1,5 @@
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const TOKEN_KEY = 'urna:authToken';
 
 // Fotos capturadas pela câmera voltam da API como um caminho relativo (/photos/...),
 // servido pelo próprio backend; links externos (https://...) já são absolutos.
@@ -11,6 +12,45 @@ export class ApiError extends Error {
     this.status = status;
   }
 }
+
+function readStoredToken() {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+// Lido na carga do módulo (não num efeito do React), pra já estar disponível
+// antes de qualquer provider montar e disparar a primeira requisição.
+let authToken = readStoredToken();
+let onUnauthorized = null;
+
+export function setAuthToken(token) {
+  authToken = token;
+  try {
+    localStorage.setItem(TOKEN_KEY, token);
+  } catch {
+    // Sem localStorage (modo privado, etc.): a sessão só não sobrevive ao reload.
+  }
+}
+
+export function clearAuthToken() {
+  authToken = null;
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    // ok
+  }
+}
+
+// AuthProvider registra aqui o que fazer quando qualquer requisição volta 401
+// (token ausente/expirado) — evita checar isso em cada tela separadamente.
+export function setUnauthorizedHandler(handler) {
+  onUnauthorized = handler;
+}
+
+export const hasAuthToken = () => Boolean(authToken);
 
 function toQuery(params = {}) {
   const query = new URLSearchParams();
@@ -26,7 +66,10 @@ async function request(path, { method = 'GET', body } = {}) {
   try {
     response = await fetch(`${API_URL}${path}`, {
       method,
-      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      headers: {
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch {
@@ -37,6 +80,7 @@ async function request(path, { method = 'GET', body } = {}) {
 
   if (!response.ok || !payload?.success) {
     const error = payload?.error;
+    if (response.status === 401) onUnauthorized?.();
     throw new ApiError(
       error?.code ?? 'UNKNOWN_ERROR',
       error?.message ?? 'Erro inesperado.',
@@ -53,8 +97,17 @@ export const api = {
   delete: (path) => request(path, { method: 'DELETE' }),
   health: () => request('/api/health'),
 
+  auth: {
+    register: (data) => request('/api/auth/register', { method: 'POST', body: data }),
+    login: (data) => request('/api/auth/login', { method: 'POST', body: data }),
+    me: () => request('/api/auth/me'),
+  },
+
   positions: {
     list: () => request('/api/positions'),
+    create: (data) => request('/api/positions', { method: 'POST', body: data }),
+    update: (id, data) => request(`/api/positions/${id}`, { method: 'PUT', body: data }),
+    remove: (id) => request(`/api/positions/${id}`, { method: 'DELETE' }),
   },
 
   parties: {
@@ -69,6 +122,13 @@ export const api = {
     create: (data) => request('/api/candidates', { method: 'POST', body: data }),
     update: (id, data) => request(`/api/candidates/${id}`, { method: 'PUT', body: data }),
     deactivate: (id) => request(`/api/candidates/${id}`, { method: 'DELETE' }),
+  },
+
+  people: {
+    list: (params) => request(`/api/people${toQuery(params)}`),
+    create: (data) => request('/api/people', { method: 'POST', body: data }),
+    update: (id, data) => request(`/api/people/${id}`, { method: 'PUT', body: data }),
+    remove: (id) => request(`/api/people/${id}`, { method: 'DELETE' }),
   },
 
   sessions: {
@@ -87,6 +147,8 @@ export const api = {
 
   results: {
     get: (sessionId) => request(`/api/sessions/${sessionId}/results`),
+    createRunoffSession: (sessionId) =>
+      request(`/api/sessions/${sessionId}/results/runoff-session`, { method: 'POST' }),
   },
 
   audit: {

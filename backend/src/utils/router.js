@@ -1,20 +1,22 @@
 // Roteador mínimo: converte "/api/sessions/:id" em regex e extrai os parâmetros.
+// `public: true` marca uma rota que não exige login (ver server.js) — toda rota
+// é protegida por padrão.
 export class Router {
   #routes = [];
 
-  add(method, pattern, handler) {
+  add(method, pattern, handler, { public: isPublic = false } = {}) {
     const keys = [];
     const source = pattern.replace(/:([A-Za-z]+)/g, (_, key) => {
       keys.push(key);
       return '([^/]+)';
     });
-    this.#routes.push({ method, regex: new RegExp(`^${source}/?$`), keys, handler });
+    this.#routes.push({ method, regex: new RegExp(`^${source}/?$`), keys, handler, public: isPublic });
   }
 
-  get(pattern, handler) { this.add('GET', pattern, handler); }
-  post(pattern, handler) { this.add('POST', pattern, handler); }
-  put(pattern, handler) { this.add('PUT', pattern, handler); }
-  delete(pattern, handler) { this.add('DELETE', pattern, handler); }
+  get(pattern, handler, options) { this.add('GET', pattern, handler, options); }
+  post(pattern, handler, options) { this.add('POST', pattern, handler, options); }
+  put(pattern, handler, options) { this.add('PUT', pattern, handler, options); }
+  delete(pattern, handler, options) { this.add('DELETE', pattern, handler, options); }
 
   match(method, pathname) {
     for (const route of this.#routes) {
@@ -26,7 +28,7 @@ export class Router {
       route.keys.forEach((key, i) => {
         params[key] = decodeURIComponent(found[i + 1]);
       });
-      return { handler: route.handler, params };
+      return { handler: route.handler, params, public: route.public };
     }
     return null;
   }

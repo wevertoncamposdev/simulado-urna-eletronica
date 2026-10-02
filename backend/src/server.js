@@ -5,6 +5,7 @@ import { applyCors } from './middleware/cors.js';
 import { handleError } from './middleware/error-handler.js';
 import { servePhoto } from './middleware/photo-static.js';
 import { readJsonBody, sendError } from './utils/http.js';
+import { verifyJwt } from './utils/jwt.js';
 
 const router = createRouter();
 
@@ -24,6 +25,17 @@ async function handleRequest(req, res) {
       return sendError(res, 404, 'ROUTE_NOT_FOUND', 'Rota não encontrada.');
     }
 
+    let userId = null;
+    if (!match.public) {
+      const authHeader = req.headers.authorization ?? '';
+      const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+      const payload = token && verifyJwt(token);
+      if (!payload?.sub) {
+        return sendError(res, 401, 'UNAUTHORIZED', 'Faça login para continuar.');
+      }
+      userId = payload.sub;
+    }
+
     const hasBody = ['POST', 'PUT', 'PATCH'].includes(req.method);
     const body = hasBody ? await readJsonBody(req) : {};
 
@@ -33,6 +45,7 @@ async function handleRequest(req, res) {
       params: match.params,
       query: Object.fromEntries(url.searchParams),
       body,
+      userId,
     });
   } catch (error) {
     handleError(res, error);

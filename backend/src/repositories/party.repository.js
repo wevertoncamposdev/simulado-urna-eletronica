@@ -2,9 +2,9 @@ import { createCollection } from '../database/index.js';
 
 const collection = createCollection('parties');
 
-// Regras de unicidade (equivalem a índices UNIQUE num banco SQL).
+// Regras de unicidade (equivalem a índices UNIQUE num banco SQL) — únicas por conta.
 function findConflict(records, data, ignoreId = null) {
-  const others = records.filter((record) => record.id !== ignoreId);
+  const others = records.filter((record) => record.id !== ignoreId && record.userId === data.userId);
   if (others.some((record) => record.number === data.number)) return 'NUMBER';
   if (others.some((record) => record.acronym.toLowerCase() === data.acronym.toLowerCase())) {
     return 'ACRONYM';
@@ -14,7 +14,7 @@ function findConflict(records, data, ignoreId = null) {
 
 // create/update retornam { record } | { conflict: 'NUMBER' | 'ACRONYM' } | { notFound: true }
 export const partyRepository = {
-  findAll: () => collection.findAll(),
+  findAllForUser: (userId) => collection.findWhere((record) => record.userId === userId),
   findById: (id) => collection.findById(id),
   findWhere: (predicate) => collection.findWhere(predicate),
   create: (data) => collection.insertUnless(data, (records) => findConflict(records, data)),

@@ -3,6 +3,8 @@
 Projeto para estudar Node.js puro, HTTP, APIs REST, arquitetura em camadas, persistência e React.
 **Não é uma urna eletrônica oficial** e não reproduz sistemas ou interfaces oficiais de votação.
 
+Lista de funcionalidades e histórico de versões: [CHANGELOG.md](CHANGELOG.md).
+
 ## Arquitetura
 
     HTTP → Routes → Controllers → Services → Repositories → JsonDatabase → arquivo JSON
@@ -16,12 +18,30 @@ significa reescrever os repositories, sem tocar em controllers, services, routes
     npm run dev:backend     # http://localhost:3000  (teste: /api/health)
     npm run dev:frontend    # http://localhost:5173
 
-Variáveis do backend: `PORT`, `HOST`, `DATA_PATH`, `FRONTEND_URL`. Frontend: `VITE_API_URL`.
+Variáveis do backend: `PORT`, `HOST`, `DATA_PATH`, `FRONTEND_URL`, `JWT_SECRET`. Frontend: `VITE_API_URL`.
 
 ## Armazenamento JSON
 
 Cada coleção é um array em `backend/data/*.json`. As operações passam por uma fila (uma por vez)
 e a gravação é atômica (arquivo temporário + rename), evitando sobrescritas simultâneas.
+
+## Contas e multiusuário
+
+Toda rota exige login, exceto `/api/health`, `POST /api/auth/register` e `POST /api/auth/login`.
+O token (JWT, HS256 implementado à mão em `utils/jwt.js` — sem biblioteca) vai no header
+`Authorization: Bearer <token>`; o frontend guarda esse token no `localStorage` e desloga sozinho
+se qualquer requisição voltar `401`. Senhas usam `scrypt` nativo do Node (`utils/password.js`).
+
+| Método | Rota | Descrição |
+| --- | --- | --- |
+| POST | /api/auth/register | Cria a conta (nome, e-mail, senha) e já devolve o token |
+| POST | /api/auth/login | Autentica e devolve o token |
+| GET | /api/auth/me | Dados da conta logada |
+
+Cada conta é isolada das demais: cargos, partidos, pessoas, candidatos, sessões e votos carregam
+um `userId`, filtrado em todo repository e service (isolamento lógico — mesmo arquivo JSON,
+nunca misturando contas). Uma conta nova já nasce com os 7 cargos padrão, prontos pra editar.
+Tentar acessar um registro de outra conta responde `404` (nunca `403`, pra não revelar que existe).
 
 ## API de sessões (Etapa 2)
 

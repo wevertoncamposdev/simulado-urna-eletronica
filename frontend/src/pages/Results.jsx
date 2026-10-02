@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Trophy } from 'lucide-react';
+import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,8 +17,10 @@ import { api } from '@/services/api';
 // Apuração por sessão: só sessões finalizadas entram na lista, como numa eleição real.
 export default function Results() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const sessionsState = useAsync(() => api.sessions.list(), []);
   const [sessionId, setSessionId] = useState(searchParams.get('sessionId') ?? '');
+  const [creatingRunoff, setCreatingRunoff] = useState(false);
 
   const finishedSessions = (sessionsState.data ?? []).filter((s) => s.status === 'FINISHED');
   const session = finishedSessions.find((s) => s.id === sessionId) ?? finishedSessions[0] ?? null;
@@ -54,6 +58,18 @@ export default function Results() {
     );
   }
 
+  async function createRunoffSession() {
+    setCreatingRunoff(true);
+    try {
+      const runoffSession = await api.results.createRunoffSession(session.id);
+      toast.success('Sessão de 2º turno criada.');
+      navigate(`/sessoes/${runoffSession.id}`);
+    } catch (err) {
+      toast.error(err.message);
+      setCreatingRunoff(false);
+    }
+  }
+
   const sessionPicker = finishedSessions.length > 1 && (
     <Select value={session.id} onValueChange={setSessionId}>
       <SelectTrigger aria-label="Sessão" className="w-56"><SelectValue /></SelectTrigger>
@@ -64,6 +80,8 @@ export default function Results() {
       </SelectContent>
     </Select>
   );
+
+  const runoffPositions = resultsState.data?.positions.filter((p) => p.runoff) ?? [];
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -76,7 +94,25 @@ export default function Results() {
       ) : !resultsState.data ? (
         <Skeleton className="h-64" />
       ) : (
-        resultsState.data.positions.map((position) => <PositionResult key={position.code} result={position} />)
+        <>
+          {runoffPositions.length > 0 && (
+            <Alert>
+              <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+                <span>
+                  {runoffPositions.length === 1
+                    ? `${runoffPositions[0].label} vai para o 2º turno.`
+                    : `${runoffPositions.length} cargos vão para o 2º turno.`}
+                </span>
+                <Button size="sm" onClick={createRunoffSession} disabled={creatingRunoff}>
+                  {creatingRunoff ? 'Criando...' : 'Criar sessão de 2º turno'}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+          {resultsState.data.positions.map((position) => (
+            <PositionResult key={position.code} result={position} />
+          ))}
+        </>
       )}
     </div>
   );
