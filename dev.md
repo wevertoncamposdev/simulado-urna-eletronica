@@ -3,7 +3,7 @@
 Lista de possíveis próximos passos, fora do roteiro das 7 etapas já concluídas. Não é um
 compromisso nem uma ordem — é um banco de ideias para escolher o que estudar a seguir.
 
-## Produto e conteúdo educacional
+## Produto e conteúdo educacional OK
 
 - **Página explicando o sistema eleitoral brasileiro**: cargos, mandatos, turno único vs. dois
   turnos, o que faz cada posição (Presidente, Governador, Senador, Deputado Federal/Estadual,
