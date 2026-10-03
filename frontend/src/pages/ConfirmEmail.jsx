@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,17 +10,21 @@ import { Logo } from '@/components/branding/Logo';
 import { useAuth } from '@/hooks/useAuth';
 import { fieldOfError } from '@/lib/form-errors';
 
-const FIELD_RULES = [['NAME', 'name'], ['EMAIL', 'email'], ['PASSWORD', 'password']];
+const FIELD_RULES = [['VERIFICATION_CODE', 'code']];
 
-export default function Register() {
-  const { status, register } = useAuth();
-  const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export default function ConfirmEmail() {
+  const { status, verifyEmail, resendVerification } = useAuth();
+  const location = useLocation();
+  const email = location.state?.email;
+  const [code, setCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState(null);
 
+  // Sem e-mail no state (ex.: acesso direto à URL) não tem o que confirmar.
+  if (!email) {
+    return <Navigate to="/login" replace />;
+  }
   if (status === 'authenticated') {
     return <Navigate to="/painel" replace />;
   }
@@ -32,11 +37,22 @@ export default function Register() {
     setSubmitting(true);
     setError(null);
     try {
-      await register(name, email, password);
-      navigate('/confirmar-email', { state: { email } });
+      await verifyEmail(email, code);
     } catch (err) {
       setError(err);
       setSubmitting(false);
+    }
+  }
+
+  async function handleResend() {
+    setResending(true);
+    try {
+      await resendVerification(email);
+      toast.success('Código reenviado.');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setResending(false);
     }
   }
 
@@ -45,9 +61,9 @@ export default function Register() {
       <div className="flex w-full max-w-sm flex-col gap-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <Link to="/"><Logo size={56} /></Link>
-          <h1 className="text-xl font-semibold">Criar conta</h1>
+          <h1 className="text-xl font-semibold">Confirme seu e-mail</h1>
           <p className="text-sm text-muted-foreground">
-            Suas sessões, cargos, partidos e candidatos ficam só na sua conta.
+            Enviamos um código de 6 dígitos para <strong>{email}</strong>.
           </p>
         </div>
 
@@ -57,37 +73,26 @@ export default function Register() {
               {error && !errorField && (
                 <Alert variant="destructive"><AlertDescription>{error.message}</AlertDescription></Alert>
               )}
-              <FormField label="Nome" htmlFor="register-name" error={fieldError('name')}>
-                <Input id="register-name" value={name} onChange={(e) => setName(e.target.value)} autoFocus autoComplete="name" />
-              </FormField>
-              <FormField label="E-mail" htmlFor="register-email" error={fieldError('email')}>
+              <FormField label="Código" htmlFor="confirm-email-code" error={fieldError('code')}>
                 <Input
-                  id="register-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                />
-              </FormField>
-              <FormField label="Senha" htmlFor="register-password" error={fieldError('password')} hint="Pelo menos 8 caracteres.">
-                <Input
-                  id="register-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="new-password"
+                  id="confirm-email-code"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  inputMode="numeric"
+                  maxLength={6}
+                  autoFocus
+                  autoComplete="one-time-code"
                 />
               </FormField>
               <Button type="submit" className="mt-2" disabled={submitting}>
-                {submitting ? 'Criando conta...' : 'Criar conta'}
+                {submitting ? 'Confirmando...' : 'Confirmar'}
+              </Button>
+              <Button type="button" variant="ghost" disabled={resending} onClick={handleResend}>
+                {resending ? 'Reenviando...' : 'Reenviar código'}
               </Button>
             </form>
           </CardContent>
         </Card>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Já tem conta? <Link to="/login" className="font-medium text-foreground underline">Entrar</Link>
-        </p>
       </div>
     </div>
   );

@@ -1,0 +1,151 @@
+# Contexto do projeto — Simulador de Urna Eletrônica (educacional)
+
+Regra principal: Responda sempre em PT-BR — isso vale pra tudo: texto pro usuário, perguntas,
+e também as descrições de chamadas de ferramenta (ex.: o campo "description" do Bash).
+
+Projeto de estudo (Node.js puro no backend + React no frontend) para praticar HTTP, APIs REST,
+arquitetura em camadas, persistência e deploy real. **Não é uma urna eletrônica oficial** e não
+reproduz sistemas ou interfaces de votação oficiais. Documentação e commits são em **português**;
+siga esse idioma em texto para o usuário e em qualquer doc/commit que você escrever aqui.
+
+Fonte de verdade sobre o estado atual do projeto (sempre confira o arquivo, não confie só nesta
+memória):
+
+- [README.md](README.md) — arquitetura, rotas da API, regras de negócio por etapa.
+- [CHANGELOG.md](CHANGELOG.md) — histórico real de versões (Keep a Changelog + SemVer, 0.x).
+- [DEPLOY.md](DEPLOY.md) — guia completo de deploy no Railway.
+- [dev.md](dev.md) — backlog de ideias futuras (não é compromisso, é banco de ideias).
+
+## Arquitetura
+
+Monorepo com dois pacotes independentes, sem workspace tool (`npm --prefix` no `package.json` da
+raiz):
+
+    backend/   Node.js puro (sem framework HTTP), ESM, porta via $PORT
+    frontend/  React 19 + Vite + Tailwind v4 + shadcn/radix, servido por nginx em produção
+    scripts/   utilitários standalone (seed, migração json→sqlite histórica)
+
+Backend em camadas estritas:
+
+    HTTP → routes → controllers → services → repositories → Prisma → PostgreSQL
+
+Só `backend/src/repositories/*.js` e `backend/src/database/index.js` conhecem o Prisma/banco —
+trocar de banco ou ORM é reescrever essa camada sem tocar controllers/services/routes/frontend.
+Fotos de candidato são a única coisa que continua em arquivo, não no banco
+(`backend/src/storage/photo-storage.js`, servido por `middleware/photo-static.js`).
+
+Autenticação: JWT HS256 implementado à mão (`utils/jwt.js`, sem lib), senha com `scrypt` nativo do
+Node (`utils/password.js`). Toda rota exige login exceto `/api/health`, `/api/auth/register` e
+`/api/auth/login`. Multiusuário por isolamento lógico (`userId` em cada tabela/repository/service,
+nunca schema separado) — acessar registro de outra conta responde `404`, nunca `403`.
+
+Integridade de votos: cadeia de hash (sha256, `utils/hash.js`) com coluna `seq` autoincrement no
+Postgres para garantir ordem de gravação; exclusão mútua entre voto e finalização de sessão via
+mutex em processo (`sessionRepository.withLock` / `enqueueSessionTask`).
+
+## Stack
+
+- **Backend**: Node >=20, ESM (`type: module`), zero framework HTTP, Prisma 6 + `@prisma/client`
+  como únicas dependências de produção. Scripts: `npm run dev` (watch + `.env`), `npm start`,
+  `npm run seed`, `npm run prisma:migrate` / `prisma:deploy` / `prisma:studio`.
+- **Frontend**: React 19, React Router 7, Vite 8 (rolldown), Tailwind 4, Radix UI, shadcn-style
+  components em `src/components/ui`, `sonner` para toasts, `lucide-react` para ícones.
+- **Banco**: PostgreSQL via Prisma. Schema em `backend/prisma/schema.prisma`, migrações em
+  `backend/prisma/migrations/`. Local: `docker compose up postgres -d` (porta `5433`, ver
+  `backend/.env.example`).
+
+## Deploy no Railway — três serviços separados (backend / frontend / database)
+
+Decisão final, documentada em [DEPLOY.md](DEPLOY.md): **três serviços Railway distintos**, não um
+único container. Cada camada no seu próprio serviço, com seu próprio `Dockerfile` e
+`railway.json`:
+
+1. **Database** — addon nativo `PostgreSQL` do Railway (não é um `Dockerfile` do repo). Expõe
+   `DATABASE_URL`/`PGUSER`/etc. automaticamente dentro do projeto Railway.
+2. **Backend** (`backend/`, Root Directory = `backend`) — `backend/Dockerfile`, Node 20 Alpine.
+   - `DATABASE_URL`: **referência** ao serviço Postgres (`Add Reference` no painel, equivalente a
+     `${{Postgres.DATABASE_URL}}`) — nunca copiar o valor manualmente (evita senha em texto solto
+     em Variables/histórico).
+   - `JWT_SECRET` obrigatório em produção — `config.js` recusa iniciar sem ele (sem fallback
+     silencioso).
+   - `FRONTEND_URL` com a URL pública do serviço frontend (CORS; aceita lista separada por vírgula
+     — ver `backend/src/controllers/health.controller.js`, que expõe `allowedOrigins` em
+     `/api/health` especificamente para depurar problema de CORS em produção).
+   - `DATA_PATH=/app/data` + **Railway Volume** montado em `/app/data` — só as fotos de candidato
+     precisam disso; o resto já é Postgres (persistente por natureza). Sem o volume, fotos somem a
+     cada deploy porque o filesystem do container é efêmero.
+   - **Sem instrução `VOLUME` no Dockerfile** — o Railway rejeita o build se o Dockerfile declarar
+     `VOLUME`; o volume é configurado só no dashboard do serviço (Settings → Volumes).
+   - `PORT`/`HOST` nunca definidos manualmente — Railway injeta `PORT`, o server já escuta em
+     `0.0.0.0` quando `NODE_ENV=production`.
+   - `prisma migrate deploy` roda automaticamente no `CMD` do Dockerfile a cada boot (idempotente)
+     — não precisa rodar migração manual no Railway.
+   - Health check em `/api/health`, configurado em `backend/railway.json`.
+3. **Frontend** (`frontend/`, Root Directory = `frontend`) — multi-stage build: Vite build →
+   nginx 1.27 alpine servindo estático.
+   - `VITE_API_URL` é a URL pública do backend, declarada como `ARG` no Dockerfile e passada pela
+     aba **Variables** normal do serviço (Railway não tem seção separada de "build arguments";
+     qualquer variável com nome igual a um `ARG` declarado no Dockerfile é repassada ao build
+     automaticamente).
+   - **É embutida no bundle em build time** — mudar o valor depois exige **redeploy/rebuild**, só
+     reiniciar o serviço não pega o novo valor. Isso já causou confusão durante a configuração;
+     por isso o Dockerfile tem um `RUN echo "[build] VITE_API_URL=$VITE_API_URL"` nos Build Logs
+     (não nos Deploy Logs) para confirmar que o valor chegou antes de compilar.
+   - `PORT` injetado pelo Railway; `nginx.conf.template` + `envsubst` (script padrão da imagem
+     nginx) resolve a porta certa no entrypoint — nunca fixar `80` manualmente, senão dá
+     **502 Bad Gateway** atrás de um proxy (ex.: Cloudflare "Proxied").
+   - Health check em `/health`, `frontend/railway.json`.
+4. **Ordem de deploy obrigatória**: Postgres → backend → frontend (backend precisa da referência
+   ao banco para migrar; frontend precisa da URL pública do backend já no ar para o build).
+
+Detalhe que já gerou troubleshooting real (ver commits recentes `2b01172`..`b2133e4`): variáveis
+de ambiente "chegando vazias" no Railway foram diagnosticadas com logs temporários de boot
+(tamanho da string, nunca o valor) e com o echo de build acima — preferir esse padrão (log de
+comprimento, não de conteúdo) a expor segredo em log ao depurar algo parecido de novo.
+
+Checklist de segurança e todos os detalhes passo a passo: ler [DEPLOY.md](DEPLOY.md) antes de
+qualquer mudança em `Dockerfile`, `railway.json`, `docker-compose.yml`, `config.js` (validação de
+env) ou CORS — não reimplementar essas decisões do zero.
+
+## Fluxo de branches
+
+- **`main`** → produção (deploy real no Railway). Só recebe merge quando o usuário decide
+  promover manualmente — **nunca dar push/merge para `main` sem o usuário pedir explicitamente**,
+  mesmo que o trabalho em `develop` esteja "pronto".
+- **`develop`** → branch de desenvolvimento ativo. Novas funcionalidades, correções e qualquer
+  trabalho do dia a dia entram aqui por padrão. Assuma `develop` como a branch de trabalho padrão
+  ao começar uma tarefa, a menos que o usuário diga o contrário.
+- Promoção `develop` → `main` é manual e de responsabilidade do usuário; o assistente prepara/
+  commita em `develop`, mas não decide quando "ir para produção".
+
+## Como desenvolver cada etapa
+
+Pra cada subitem do `PLANO.md` (8.1, 8.2, 8.3...), o padrão é executar do início ao fim até
+funcionar — não parar no meio pra confirmar decisões de design que já são claras a partir do
+próprio `PLANO.md`, do código existente ou do padrão já estabelecido nas etapas anteriores:
+
+- **Não entrar em modo de planejamento (EnterPlanMode) nem usar AskUserQuestion por padrão** pra
+  cada nova etapa — já temos escopo, convenções (ver 8.1/8.2 como referência de como uma etapa
+  fica pronta) e o `PLANO.md` descrevendo o que cada subitem precisa. Só parar e perguntar quando
+  for algo que só o usuário pode decidir de verdade (ex.: uma credencial que falta, uma mudança de
+  comportamento visível que não está no `PLANO.md`) — não pra validar abordagem técnica que já
+  seguiria o padrão do resto do código.
+- **Focar só na funcionalidade pedida.** Se notar algo fora do escopo (drift, comentário solto,
+  nome inconsistente), só mexer nisso se isso efetivamente travar a etapa atual (como a correção
+  do drift de índices do Prisma na 8.1, que impedia gerar a migração do jeito certo) — caso
+  contrário, deixar passar, ou no máximo citar numa frase no resumo final, sem parar pra agir ali.
+- Testar de ponta a ponta (backend via curl, build do frontend) antes de reportar como pronto,
+  do jeito que já foi feito na 8.1 e na 8.2 — isso continua valendo.
+- Ambiente de teste: backend e frontend rodam direto no Windows (não em Docker no dia a dia); o
+  Postgres roda no WSL. O `docker-compose.yml`/Dockerfiles só são ajustados ao final, se a
+  mudança exigir (ex.: variável de ambiente nova).
+
+## Convenções de trabalho
+
+- Commits e documentação (README, CHANGELOG, DEPLOY) em português, seguindo o tom já usado nesses
+  arquivos (direto, técnico, explica o "porquê" nos comentários de código mais do que o "o quê").
+- `CHANGELOG.md` segue Keep a Changelog + SemVer, projeto em `0.x` (breaking change cabe em
+  `MINOR`). Ao fechar uma funcionalidade visível, atualizar `[Não lançado]` ou cortar uma versão
+  nova costuma ser esperado — mas só commitar isso se o usuário pedir.
+- Comentários no código só para decisões não óbvias (trade-off, invariante, workaround) — o estilo
+  já usado no repo (ver `schema.prisma`, `Dockerfile`s) é o padrão a seguir.

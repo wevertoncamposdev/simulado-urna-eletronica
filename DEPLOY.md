@@ -29,6 +29,9 @@ próprio `Dockerfile` — não existe backend/frontend num único container.
    | `FRONTEND_URL` | URL pública do serviço frontend (ex.: `https://urna-frontend.up.railway.app`) | sim, senão o CORS bloqueia o navegador |
    | `DATA_PATH` | `/app/data` | sim, ver volume abaixo |
    | `NODE_ENV` | `production` | já vem assim do Dockerfile; não precisa repetir |
+   | `RESEND_API_KEY` | chave de API do [Resend](https://resend.com) (painel → API Keys) | **sim** — confirmação de e-mail (Etapa 8.1); o servidor não inicia sem ela |
+   | `EMAIL_FROM_ADDRESS` | e-mail remetente, de um domínio verificado no Resend (painel → Domains) | **sim** |
+   | `EMAIL_FROM_NAME` | nome de exibição do remetente (ex.: `UrnaLab`) | **sim** |
 
    `PORT` e `HOST` **não devem ser definidos manualmente** — o Railway injeta `PORT`
    e o backend já escuta em `0.0.0.0` automaticamente quando `NODE_ENV=production`.
@@ -100,5 +103,16 @@ boa chance de funcionar lá. Ver `docker-compose.yml` para os valores de exemplo
 - [ ] HTTPS: o Railway já serve cada serviço com TLS por padrão no domínio
       `*.up.railway.app` — se usar domínio próprio, configure o certificado nas
       configurações de domínio do serviço.
+- [ ] Domínio próprio atrás do Cloudflare (proxy "Proxied"/nuvem laranja): em
+      Settings → Networking do serviço no Railway, confira se a porta pública
+      configurada bate com a porta que o container realmente escuta (`$PORT`
+      injetado pelo Railway, lido pelo `nginx.conf.template` no frontend). Uma
+      porta errada aí (ex.: fixar `80` manualmente) faz o Railway não conseguir
+      encaminhar a requisição pro container, e o Cloudflare devolve **502 Bad
+      Gateway** mesmo com o DNS e o proxy corretos.
 - [ ] `backend/.env` e `frontend/.env` **nunca** são commitados (já cobertos pelo
       `.gitignore`); só os `.env.example` entram no repositório.
+- [ ] `EMAIL_FROM_ADDRESS` é de um domínio **verificado** no Resend (painel → Domains) — com
+      um domínio não verificado, o envio do código de confirmação falha silenciosamente (o
+      cadastro ainda funciona, mas o e-mail nunca chega; ver `console.error` nos logs do
+      backend).

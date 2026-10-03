@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Paleta da identidade visual (ver identidade visual.md na raiz do projeto):
+   --primary / --sidebar / --sidebar-accent = azul profundo (estrutural, "urna")
+   --brand-green (= --success)              = verde (estrutural, participação, "lab")
+   --accent / --accent-soft                 = amarelo educativo (destaque)
+   --coral / --coral-soft                   = alerta leve / ponto de atenção
+   --background / --muted                   = superfícies claras / apoio
+   Hex mantidos exatamente como já estavam no projeto — só coral é novo, não existia
+   nenhum tom parecido antes. */
 :root {
   --background: #f5f6fa;
   --foreground: #161b26;
@@ -16,6 +24,9 @@
   --ring: #2c3ed9;
   --success: #12795a;
   --success-soft: #dff3ec;
+  --brand-green: #12795a;
+  --coral: #e8604c;
+  --coral-soft: #fce8dd;
   --danger: #b42318;
   --danger-soft: #fde7e4;
   --sidebar: #171c3a;
@@ -40,6 +51,9 @@
   --color-ring: var(--ring);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
+  --color-brand-green: var(--brand-green);
+  --color-coral: var(--coral);
+  --color-coral-soft: var(--coral-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-sidebar: var(--sidebar);
@@ -49,12 +63,21 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 6px);
+
+  /* Manrope é o texto/wordmark; Sora fica só pra títulos (h1-h4, ver @layer base
+     abaixo); IBM Plex Mono já era usado via font-mono (hashes, números, códigos) —
+     trocar só o token aqui atualiza esses lugares sem editar nenhum componente. */
+  --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-heading: "Sora", var(--font-sans);
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 @layer base {
   * { @apply border-border; }
   body {
-    @apply bg-background text-foreground antialiased;
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    @apply bg-background text-foreground antialiased font-sans;
+  }
+  h1, h2, h3, h4 {
+    @apply font-heading;
   }
 }

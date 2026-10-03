@@ -14,6 +14,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import { Logo } from '@/components/branding/Logo';
+import { Wordmark } from '@/components/branding/Wordmark';
 import { cn } from '@/lib/utils';
 
 // Agrupado por momento do fluxo (não por ordem alfabética ou de criação):
@@ -93,7 +94,7 @@ export function Sidebar({ collapsed }) {
       <div className="flex items-center gap-2.5 px-5 py-5">
         <Logo size={32} />
         <div className="flex flex-col leading-tight">
-          <span className="text-sm font-semibold text-white">UrnaLab</span>
+          <Wordmark dark className="text-sm" />
           <span className="text-[11px] text-sidebar-foreground/70">Urna eletrônica educacional</span>
         </div>
       </div>

@@ -10,6 +10,52 @@ incompatíveis sem aviso extra, como é comum nessa faixa de versão.
 
 ## [Não lançado]
 
+### Changed
+
+- **Identidade visual UrnaLab** (`identidade visual.md`): wordmark oficial ("urna" em azul
+  profundo + "lab" em verde, sempre minúsculo) substitui o texto "UrnaLab" solto no cabeçalho,
+  no menu lateral, na landing e no login (`components/branding/Wordmark.jsx`). Tipografia da
+  marca (Manrope para texto, Sora para títulos, IBM Plex Mono para dados técnicos — hashes,
+  números, códigos) carregada via Google Fonts. Novo tom de coral (`--coral`/`--coral-soft`,
+  único hex novo — o resto da paleta já existia no projeto) para alertas leves: a notificação de
+  perfil incompleto no menu do usuário e o aviso de perfil pendente no `/perfil` deixaram de usar
+  a cor de erro. E-mails transacionais (confirmação de e-mail, redefinição de senha) ganharam
+  layout com cabeçalho, wordmark e rodapé institucional, seguindo a mesma paleta do site.
+
+## [0.13.0] — 2026-10-03
+
+### Added
+
+- **Confirmação de e-mail no cadastro (Etapa 8.1)**: `POST /api/auth/register` cria a conta e
+  envia um código de 6 dígitos por e-mail (via [Resend](https://resend.com)), mas não devolve
+  mais token — só depois de confirmado (`POST /api/auth/verify-email`) a conta recebe acesso.
+  `POST /api/auth/login` passa a recusar contas não confirmadas (`EMAIL_NOT_VERIFIED`, 403); o
+  frontend redireciona automaticamente para a tela de confirmação nesse caso. Código expira em
+  15 minutos, tem limite de 5 tentativas e reenvio (`POST /api/auth/resend-verification`) tem
+  cooldown de 60 segundos. Contas criadas antes desta mudança foram retroagidas como já
+  confirmadas (migração `add_email_verification`), para não trancar quem já tinha conta.
+  Variáveis novas: `RESEND_API_KEY`, `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME` (ver
+  `backend/.env.example` e `DEPLOY.md`).
+- **Reset de senha (Etapa 8.2)**: "Esqueci minha senha" no login (`POST /api/auth/forgot-
+  password`) envia um link de redefinição por e-mail (reaproveita o Resend da 8.1), válido por
+  30 minutos e de uso único (`POST /api/auth/reset-password`). A resposta de `forgot-password` é
+  **sempre igual**, exista ou não o e-mail — não revela quais e-mails têm conta. Depois de
+  redefinir, é preciso logar de novo com a senha nova (sem login automático).
+- **Perfil da instituição (Etapa 8.3)**: nova entidade `InstitutionProfile` (1:1 com a conta) —
+  nome, endereço, contato e site (opcional) — com `GET`/`PUT /api/institution-profile`.
+- **Tela de perfil do usuário e obrigatoriedade na criação de sessão (Etapa 8.4)**: nova tela
+  `/perfil` (acessível pelo menu — antes só o nome da conta, agora um dropdown com
+  "Configurações" e "Sair") reúne os dados da conta, o formulário da instituição e a troca de
+  senha (`POST /api/auth/change-password`, exige a senha atual). Em vez de bloquear o sistema
+  inteiro (como a 8.3 fazia inicialmente), a exigência agora é pontual: `POST /api/sessions`
+  recusa criar sessão (`403 INSTITUTION_PROFILE_REQUIRED`) sem o perfil da instituição
+  cadastrado. Perfil incompleto não mostra mais um alerta fixo no Dashboard — vira uma
+  notificação (balão vermelho no menu do usuário, `lib/notifications.js`), primeiro caso de uma
+  estrutura pensada pra crescer com outras notificações depois. Telefone da instituição ganhou
+  máscara e validação (10 ou 11 dígitos com DDD) e o site passou a exigir um domínio com ponto
+  (`https://algo.com`, não só `https://algo`). Login sempre abre o Dashboard, mesmo quando o
+  usuário foi desviado pro login a partir de outra página.
+
 ## [0.12.0] — 2026-10-02
 
 ### Added

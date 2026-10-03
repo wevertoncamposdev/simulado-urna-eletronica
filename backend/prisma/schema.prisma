@@ -10,20 +10,70 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  createdAt    DateTime @default(now())
+  id              String    @id @default(uuid())
+  name            String
+  email           String    @unique
+  passwordHash    String
+  // Nulo até o código de 6 dígitos enviado por e-mail (ver EmailVerificationCode) ser
+  // confirmado. Contas existentes antes desta coluna existir são retroagidas na própria
+  // migração (emailVerifiedAt = createdAt) — ver migration.sql.
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
 
-  positions  Position[]
-  parties    Party[]
-  people     Person[]
-  candidates Candidate[]
-  sessions   Session[]
-  votes      Vote[]
+  positions             Position[]
+  parties               Party[]
+  people                Person[]
+  candidates            Candidate[]
+  sessions              Session[]
+  votes                 Vote[]
+  emailVerificationCode EmailVerificationCode?
+  passwordResetToken    PasswordResetToken?
+  institutionProfile    InstitutionProfile?
 
   @@map("users")
+}
+
+model InstitutionProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  address   String
+  contact   String
+  // Opcional — nem toda instituição tem site.
+  website   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("institution_profiles")
+}
+
+model EmailVerificationCode {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // sha256 do código de 6 dígitos — nunca o valor em texto puro. A defesa contra força
+  // bruta é o limite de tentativas e a expiração, não o custo do hash (ver auth.service.js).
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("email_verification_codes")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // sha256 do token do link — nunca o valor em texto puro. Diferente do código de 6
+  // dígitos, aqui não há limite de tentativas: 18 bytes aleatórios não são alvo de
+  // força bruta prática, a defesa é só a expiração e o uso único (ver auth.service.js).
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
 }
 
 model Position {
@@ -68,6 +118,7 @@ model Person {
 
   candidates Candidate[]
 
+  @@index([userId])
   @@map("people")
 }
 
@@ -89,6 +140,7 @@ model Session {
   candidates Candidate[]
   votes      Vote[]
 
+  @@index([userId])
   @@map("sessions")
 }
 
@@ -111,6 +163,9 @@ model Candidate {
   votes Vote[]
 
   @@unique([sessionId, position, number])
+  @@index([userId])
+  @@index([partyId])
+  @@index([personId])
   @@map("candidates")
 }
 
@@ -137,5 +192,8 @@ model Vote {
   hash            String
   previousHash    String?
 
+  @@index([userId])
+  @@index([sessionId])
+  @@index([candidateId])
   @@map("votes")
 }

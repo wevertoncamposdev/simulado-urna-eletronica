@@ -1,9 +1,10 @@
 import { sessionRepository } from '../repositories/session.repository.js';
 import { candidateRepository } from '../repositories/candidate.repository.js';
+import { institutionProfileRepository } from '../repositories/institution-profile.repository.js';
 import { positionRepository } from '../repositories/position.repository.js';
 import { voteRepository } from '../repositories/vote.repository.js';
 import { SESSION_LIMITS, SESSION_STATUS } from '../rules/session-rules.js';
-import { badRequest, conflict, notFound } from '../utils/errors.js';
+import { badRequest, conflict, forbidden, notFound } from '../utils/errors.js';
 import { generatePublicToken } from '../utils/id.js';
 import { isPlainObject } from '../utils/object.js';
 
@@ -93,6 +94,14 @@ export const sessionService = {
   },
 
   async create(input, userId) {
+    const institutionProfile = await institutionProfileRepository.findByUserId(userId);
+    if (!institutionProfile) {
+      throw forbidden(
+        'INSTITUTION_PROFILE_REQUIRED',
+        'Cadastre os dados da instituição antes de criar uma sessão eleitoral.',
+      );
+    }
+
     const data = await normalizeInput(isPlainObject(input) ? input : {}, userId);
     const session = await sessionRepository.create({
       ...data,

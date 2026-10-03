@@ -3,6 +3,7 @@ import { registerAuditRoutes } from './audit.routes.js';
 import { registerAuthRoutes } from './auth.routes.js';
 import { registerCandidateRoutes } from './candidate.routes.js';
 import { registerHealthRoutes } from './health.routes.js';
+import { registerInstitutionProfileRoutes } from './institution-profile.routes.js';
 import { registerPartyRoutes } from './party.routes.js';
 import { registerPersonRoutes } from './person.routes.js';
 import { registerPositionRoutes } from './position.routes.js';
@@ -15,6 +16,7 @@ export function createRouter() {
   const router = new Router();
   registerHealthRoutes(router);
   registerAuthRoutes(router);
+  registerInstitutionProfileRoutes(router);
   registerPositionRoutes(router);
   registerSessionRoutes(router);
   registerPartyRoutes(router);
