@@ -31,5 +31,7 @@ USER node
 EXPOSE 3000
 
 # `migrate deploy` só aplica migrações pendentes (idempotente) — seguro rodar
-# em todo start do container, antes de abrir a porta.
-CMD ["sh", "-c", "npx prisma migrate deploy && node src/server.js"]
+# em todo start do container, antes de abrir a porta. O echo no início não
+# imprime a senha — só o tamanho da string, pra diagnosticar "DATABASE_URL
+# chega vazia" sem expor segredo nenhum no log.
+CMD ["sh", "-c", "echo \"[boot] DATABASE_URL length: ${#DATABASE_URL}\"; echo \"[boot] JWT_SECRET length: ${#JWT_SECRET}\"; npx prisma migrate deploy && node src/server.js"]
