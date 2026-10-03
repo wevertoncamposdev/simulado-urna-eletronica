@@ -35,11 +35,16 @@ compromisso nem uma ordem — é um banco de ideias para escolher o que estudar 
 
 ## Dados e infraestrutura
 
-- **Migração para PostgreSQL**: trocar só os repositories (o contrato já foi desenhado pensando
-  nisso — `database/index.js` é o único ponto que conhece o `JsonDatabase`). Bom exercício de
-  transações reais e índices únicos via `UNIQUE CONSTRAINT` em vez de `insertUnless`.
-- **Docker Compose**: um `docker-compose up` subindo backend + frontend + Postgres, pra não
-  depender de instalar Node/Postgres local.
+- ~~**Migração para PostgreSQL**: trocar só os repositories (o contrato já foi desenhado pensando
+  nisso — `database/index.js` era o único ponto que conhecia o `JsonDatabase`).~~ (concluído: Prisma
+  + PostgreSQL, só os repositories e `database/index.js` mudaram — services/controllers/frontend
+  intocados. Unicidade virou `UNIQUE CONSTRAINT` real no banco, com o erro `P2002` mapeado para o
+  mesmo formato de conflito que `insertUnless`/`updateUnless` usavam. A cadeia de hash dos votos
+  precisou de uma coluna `seq` auto-incremento — `createdAt` sozinho não garante ordem sob dois
+  votos no mesmo milissegundo. `sessionRepository.withLock` deixou de ser a fila do `JsonDatabase`
+  e passou a ser um mutex em processo (`enqueueSessionTask`), mesma garantia de antes.)
+- ~~**Docker Compose**: um `docker-compose up` subindo backend + frontend + Postgres, pra não
+  depender de instalar Node/Postgres local.~~ (concluído, junto com o deploy — ver `DEPLOY.md`.)
 - **Backup/restore**: comando para exportar/importar o estado completo de uma eleição (hoje só
   existe `npm run seed`, que sempre recria do zero).
 - **Paginação** nas listagens (`/api/candidates`, `/api/votes` se virar endpoint): hoje tudo é

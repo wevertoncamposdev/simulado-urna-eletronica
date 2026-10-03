@@ -1,13 +1,32 @@
-# Simula o deploy de produção localmente: dois containers isolados, comunicando só
-# por HTTP (como no Railway), com os dados do backend num volume nomeado. Não é
-# usado pelo Railway (cada serviço lá usa só o Dockerfile correspondente) — é
-# só pra testar a imagem antes de subir.
-#
-# Uso:
-#   docker compose up --build
-#   backend:  http://localhost:3000/api/health
-#   frontend: http://localhost:8080
+# Dois usos:
+#   1. Só o banco, pra rodar backend/frontend direto no host (recomendado no dia a dia):
+#        docker compose up postgres -d
+#        npm run dev:backend   # conecta em localhost:5433, ver backend/.env.example
+#        npm run dev:frontend
+#   2. Stack completa, simulando o deploy de produção (mesmas imagens do Railway):
+#        docker compose up --build
+#        backend:  http://localhost:3000/api/health
+#        frontend: http://localhost:8080
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: urna
+      POSTGRES_PASSWORD: urna
+      POSTGRES_DB: urna
+    # Publicado em 5433 (não 5432) pra não colidir com um PostgreSQL já
+    # instalado nativamente na máquina — se você não tiver um, pode trocar
+    # para "5432:5432" e simplificar as URLs abaixo.
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U urna"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   backend:
     build: ./backend
     ports:
@@ -16,9 +35,13 @@ services:
       NODE_ENV: production
       JWT_SECRET: ${JWT_SECRET:-troque-este-valor-antes-de-usar-de-verdade}
       FRONTEND_URL: http://localhost:8080
+      DATABASE_URL: postgresql://urna:urna@postgres:5432/urna
       DATA_PATH: /app/data
     volumes:
       - backend-data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   frontend:
@@ -33,4 +56,5 @@ services:
     restart: unless-stopped
 
 volumes:
+  postgres-data:
   backend-data:

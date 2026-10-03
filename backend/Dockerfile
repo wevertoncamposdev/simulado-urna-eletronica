@@ -3,20 +3,22 @@ FROM node:20-alpine
 ENV NODE_ENV=production
 WORKDIR /app
 
-# Backend não tem dependências de terceiros (Node.js puro), mas copiamos o
-# package.json antes do resto do código pra aproveitar o cache de camadas do Docker
-# caso isso mude no futuro.
+# Prisma (motor de query) precisa de OpenSSL no Alpine.
+RUN apk add --no-cache openssl
+
+# package.json + prisma/ antes do `npm ci` de propósito: o hook `postinstall`
+# (prisma generate) já roda durante o próprio `npm ci` e precisa do schema
+# presente nesse momento. Copiar `src` só depois também aproveita melhor o
+# cache do Docker (mudar código não invalida a camada de install).
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev --ignore-scripts
+COPY prisma ./prisma
+RUN npm ci
 
 COPY src ./src
 
-# Seed (scripts/seed.js, na raiz do repo) é uma ferramenta de desenvolvimento —
-# não faz parte da imagem de produção. Rode-a localmente contra os dados de um
-# volume, se precisar popular um ambiente novo.
-
-# Dados ficam fora da imagem — monte um volume aqui (ver docker-compose.yml /
-# Railway Volumes). Sem volume, tudo é perdido no próximo deploy.
+# Fotos de candidatos continuam em arquivo (o resto dos dados foi para o
+# Postgres via Prisma) — monte um volume aqui (ver docker-compose.yml /
+# Railway Volumes). Sem volume, as fotos somem a cada deploy.
 RUN mkdir -p /app/data && chown -R node:node /app
 VOLUME ["/app/data"]
 ENV DATA_PATH=/app/data
@@ -26,4 +28,6 @@ USER node
 
 EXPOSE 3000
 
-CMD ["node", "src/server.js"]
+# `migrate deploy` só aplica migrações pendentes (idempotente) — seguro rodar
+# em todo start do container, antes de abrir a porta.
+CMD ["sh", "-c", "npx prisma migrate deploy && node src/server.js"]

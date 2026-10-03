@@ -3,8 +3,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { config } from '../config.js';
 
-// Único ponto que grava/lê os arquivos de foto em disco (paralelo ao JsonDatabase,
-// mas para binários em vez de coleções JSON). Fotos ficam em backend/data/photos.
+// Único ponto que grava/lê os arquivos de foto em disco (o resto dos dados vive no
+// Postgres via Prisma — fotos continuam em arquivo). Ficam em backend/data/photos.
 const EXTENSION_BY_MIME = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 const DATA_URI_PATTERN = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/;
 const STORED_PATH_PATTERN = /^\/photos\/[0-9a-f-]+\.(?:jpg|png|webp)$/i;

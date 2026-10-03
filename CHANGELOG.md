@@ -10,6 +10,24 @@ incompatíveis sem aviso extra, como é comum nessa faixa de versão.
 
 ## [Não lançado]
 
+### Changed
+
+- **Banco de dados: JSON em arquivo → PostgreSQL (Prisma)**. Só os repositories
+  (`src/repositories/*.js`) e `src/database/index.js` mudaram — services, controllers e frontend
+  ficaram intocados, como o desenho em camadas sempre prometeu. Unicidade (e-mail, sigla/número de
+  partido, código de cargo, número de candidato por sessão+cargo) agora é `UNIQUE CONSTRAINT` real
+  no banco, com o erro de violação (`P2002`) mapeado pro mesmo formato de conflito que
+  `insertUnless`/`updateUnless` usavam. A cadeia de hash dos votos (auditoria) ganhou uma coluna de
+  sequência (`seq`, auto-incremento) pra garantir a ordem de leitura mesmo quando dois votos caem
+  no mesmo milissegundo — só por `createdAt` isso não era garantido. `sessionRepository.withLock`
+  deixou de depender da fila do `JsonDatabase` e passou a usar um mutex em processo
+  (`enqueueSessionTask`), preservando a mesma garantia de exclusão mútua entre um voto sendo
+  registrado e a sessão sendo finalizada ao mesmo tempo. Migração e schema em `backend/prisma/`.
+- **Deploy pronto para produção**: `Dockerfile` (backend e frontend) e `docker-compose.yml` (com
+  Postgres local em dev), `railway.json` por serviço, `.env.example` documentando todas as
+  variáveis, e `DEPLOY.md` com o passo a passo completo para o Railway. `config.js` agora recusa
+  iniciar em produção sem `JWT_SECRET`/`DATABASE_URL` em vez de cair num padrão silencioso.
+
 ## [0.10.0] — 2026-10-02
 
 ### Added

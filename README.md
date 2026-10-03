@@ -7,19 +7,21 @@ Lista de funcionalidades e histórico de versões: [CHANGELOG.md](CHANGELOG.md).
 
 ## Arquitetura
 
-    HTTP → Routes → Controllers → Services → Repositories → JsonDatabase → arquivo JSON
+    HTTP → Routes → Controllers → Services → Repositories → Prisma → PostgreSQL
 
-Só o `JsonDatabase` e o `database/index.js` conhecem o armazenamento. Trocar para SQLite/PostgreSQL
-significa reescrever os repositories, sem tocar em controllers, services, routes ou frontend.
+Só os repositories (`src/repositories/*.js`) e `database/index.js` conhecem o Prisma — trocar de
+banco (ou de ORM) significa reescrever essa camada, sem tocar em controllers, services, routes ou
+frontend. Fotos de candidatos são a única coisa que continua em arquivo (`storage/photo-storage.js`).
 
 ## Como executar
 
     npm run install:all
-    npm run dev:backend     # http://localhost:3000  (teste: /api/health)
-    npm run dev:frontend    # http://localhost:5173
+    docker compose up postgres -d   # só o Postgres, em container (ver backend/.env.example)
+    npm run dev:backend             # http://localhost:3000  (teste: /api/health)
+    npm run dev:frontend            # http://localhost:5173
 
-Variáveis do backend: `PORT`, `HOST`, `DATA_PATH`, `FRONTEND_URL`, `JWT_SECRET`, `NODE_ENV`
-(ver `backend/.env.example`). Frontend: `VITE_API_URL` (ver `frontend/.env.example`).
+Variáveis do backend: `PORT`, `HOST`, `DATABASE_URL`, `DATA_PATH`, `FRONTEND_URL`, `JWT_SECRET`,
+`NODE_ENV` (ver `backend/.env.example`). Frontend: `VITE_API_URL` (ver `frontend/.env.example`).
 
 ## Deploy em produção
 
@@ -44,10 +46,13 @@ Windows. Isso só abre acesso dentro da mesma rede (Wi-Fi/LAN) — para acesso p
 túnel (ex.: `ngrok http 5173`) ou um deploy de verdade; nenhuma das duas formas está configurada
 aqui, já que o projeto não usa HTTPS nem outros cuidados de produção.
 
-## Armazenamento JSON
+## Banco de dados
 
-Cada coleção é um array em `backend/data/*.json`. As operações passam por uma fila (uma por vez)
-e a gravação é atômica (arquivo temporário + rename), evitando sobrescritas simultâneas.
+PostgreSQL via Prisma (`backend/prisma/schema.prisma`). Migrações ficam em
+`backend/prisma/migrations/` e são aplicadas com `npm run prisma:deploy`
+(automático a cada start em produção, ver `backend/Dockerfile`) ou
+`npm run prisma:migrate` ao criar uma nova migração em desenvolvimento.
+`npm run prisma:studio` abre uma UI pra inspecionar os dados.
 
 ## Contas e multiusuário
 

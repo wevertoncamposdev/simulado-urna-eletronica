@@ -2,12 +2,12 @@ import { sessionRepository } from '../repositories/session.repository.js';
 
 export const healthService = {
   async check() {
-    let storage = { type: 'json', ok: true };
+    let storage = { type: 'postgresql', ok: true };
 
     try {
-      await sessionRepository.count(); // prova que a cadeia Repository → JsonDatabase → arquivo funciona
+      await sessionRepository.count(); // prova que a conexão com o banco está de pé
     } catch (error) {
-      storage = { type: 'json', ok: false, message: error.message };
+      storage = { type: 'postgresql', ok: false, message: error.message };
     }
 
     return {

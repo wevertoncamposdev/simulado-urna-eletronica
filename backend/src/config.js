@@ -16,6 +16,12 @@ if (!process.env.JWT_SECRET) {
   console.warn('[config] JWT_SECRET não definido — usando segredo de desenvolvimento (não use em produção).');
 }
 
+// Sem DATABASE_URL o Prisma só falharia na primeira query, com um erro confuso.
+// Falhar aqui, na subida do processo, deixa o problema óbvio de imediato.
+if (!process.env.DATABASE_URL) {
+  throw new Error('[config] DATABASE_URL é obrigatório (string de conexão do PostgreSQL).');
+}
+
 // FRONTEND_URL aceita uma ou mais origens separadas por vírgula — por exemplo,
 // "http://localhost:5173,http://192.168.0.10:5173" pra liberar o próprio
 // computador (localhost) e o celular (IP da rede local) ao mesmo tempo.
@@ -30,6 +36,8 @@ export const config = {
   // Railway (e containers em geral) precisam escutar em todas as interfaces —
   // "localhost" dentro do container não é alcançável de fora dele.
   host: process.env.HOST || (isProduction ? '0.0.0.0' : 'localhost'),
+  // Só fotos de candidatos ficam em disco agora — o resto dos dados mora no
+  // Postgres (ver DATABASE_URL). Em produção, aponte para um volume persistente.
   dataPath: process.env.DATA_PATH
     ? path.resolve(process.env.DATA_PATH)
     : path.join(backendRoot, 'data'),

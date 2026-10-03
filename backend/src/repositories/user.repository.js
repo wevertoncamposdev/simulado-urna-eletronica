@@ -1,18 +1,22 @@
-import { createCollection } from '../database/index.js';
-
-const collection = createCollection('users');
-
-// E-mail é o identificador de login — único, comparado em caixa baixa.
-function findConflict(records, data, ignoreId = null) {
-  const others = records.filter((record) => record.id !== ignoreId);
-  return others.some((record) => record.email.toLowerCase() === data.email.toLowerCase()) ? 'EMAIL' : null;
-}
+import { prisma, serializeDates, isUniqueViolation } from '../database/index.js';
 
 export const userRepository = {
-  findById: (id) => collection.findById(id),
-  async findByEmail(email) {
-    const records = await collection.findAll();
-    return records.find((record) => record.email.toLowerCase() === email.toLowerCase()) ?? null;
+  async findById(id) {
+    return serializeDates(await prisma.user.findUnique({ where: { id } }));
   },
-  create: (data) => collection.insertUnless(data, (records) => findConflict(records, data)),
+
+  async findByEmail(email) {
+    // E-mail já chega em caixa baixa de auth.service (normalizeEmail) — comparação exata.
+    return serializeDates(await prisma.user.findUnique({ where: { email: email.toLowerCase() } }));
+  },
+
+  async create(data) {
+    try {
+      const record = await prisma.user.create({ data });
+      return { record: serializeDates(record) };
+    } catch (error) {
+      if (isUniqueViolation(error)) return { conflict: 'EMAIL' };
+      throw error;
+    }
+  },
 };

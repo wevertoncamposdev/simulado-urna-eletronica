@@ -6,7 +6,17 @@ próprio `Dockerfile` — não existe backend/frontend num único container.
     backend/   → Dockerfile  (Node 20, API HTTP pura, porta via $PORT)
     frontend/  → Dockerfile  (build Vite + nginx, porta via $PORT)
 
-## 1. Backend
+## 1. Banco de dados (Postgres)
+
+1. No projeto Railway: New → Database → **Add PostgreSQL**. O Railway cria o
+   serviço e já expõe as variáveis `DATABASE_URL`, `PGUSER`, etc. nele.
+2. Não copie o valor de `DATABASE_URL` manualmente para o backend. No serviço
+   **backend**, em Variables, clique em **Add Reference** e aponte para
+   `DATABASE_URL` do serviço Postgres (equivale a escrever
+   `${{Postgres.DATABASE_URL}}`). O Railway resolve isso automaticamente e os
+   dois serviços conversam pela rede privada, sem expor o banco na internet.
+
+## 2. Backend
 
 1. New Service → Deploy from GitHub repo → **Root Directory: `backend`**. O Railway
    detecta o `backend/Dockerfile` e o `backend/railway.json` automaticamente.
@@ -14,6 +24,7 @@ próprio `Dockerfile` — não existe backend/frontend num único container.
 
    | Nome | Valor | Obrigatório |
    | --- | --- | --- |
+   | `DATABASE_URL` | referência ao Postgres (ver passo 1) — **não** copiar o valor manualmente | **sim** |
    | `JWT_SECRET` | string aleatória forte (ex.: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`) | **sim** — o servidor não inicia sem ele em produção |
    | `FRONTEND_URL` | URL pública do serviço frontend (ex.: `https://urna-frontend.up.railway.app`) | sim, senão o CORS bloqueia o navegador |
    | `DATA_PATH` | `/app/data` | sim, ver volume abaixo |
@@ -22,12 +33,17 @@ próprio `Dockerfile` — não existe backend/frontend num único container.
    `PORT` e `HOST` **não devem ser definidos manualmente** — o Railway injeta `PORT`
    e o backend já escuta em `0.0.0.0` automaticamente quando `NODE_ENV=production`.
 
-3. **Volume persistente** (essencial): Settings → Volumes → Add Volume, monte em
-   `/app/data`. Sem isso, cada deploy novo apaga todos os dados (sessões, votos,
-   fotos) porque o filesystem do container é efêmero.
-4. Health check já configurado em `backend/railway.json` (`/api/health`).
+3. **Volume persistente** para as fotos de candidatos: Settings → Volumes → Add
+   Volume, monte em `/app/data`. Sessões, votos e todo o resto já ficam no
+   Postgres (persistente por natureza) — só as fotos são arquivo em disco. Sem
+   o volume, as fotos somem a cada deploy porque o filesystem do container é
+   efêmero.
+4. **Migrações**: o `Dockerfile` já roda `prisma migrate deploy` automaticamente
+   antes de iniciar o servidor, a cada deploy (ver `CMD` no final do arquivo) —
+   não é preciso rodar nada manualmente no Railway.
+5. Health check já configurado em `backend/railway.json` (`/api/health`).
 
-## 2. Frontend
+## 3. Frontend
 
 1. New Service → Deploy from GitHub repo → **Root Directory: `frontend`**.
 2. Build Argument (Settings → Build → Build Arguments — **não** em Variables, pois
@@ -41,14 +57,23 @@ próprio `Dockerfile` — não existe backend/frontend num único container.
    arquivos estáticos. `PORT` é injetado pelo Railway e o nginx escuta nele
    automaticamente (`nginx.conf.template` + `envsubst`).
 
-## 3. Ordem de deploy
+## 4. Ordem de deploy
 
-Suba o **backend primeiro**, copie a URL pública gerada, configure-a como
-`VITE_API_URL` no build do frontend e faça o deploy do frontend. Se trocar a URL do
-backend depois, é preciso **rebuildar o frontend** (não só reiniciar) — a variável
-está embutida no bundle.
+Suba **Postgres → backend → frontend**, nessa ordem: o backend precisa da
+referência ao banco antes de poder migrar, e o frontend precisa da URL pública
+do backend já no ar para o build. Se trocar a URL do backend depois, é preciso
+**rebuildar o frontend** (não só reiniciar) — `VITE_API_URL` está embutida no
+bundle.
 
-## 4. Testando localmente antes de subir
+## 5. Testando localmente antes de subir
+
+Dia a dia (banco em Docker, app no host, com watch/hot-reload):
+
+    docker compose up postgres -d
+    npm run dev:backend     # ver backend/.env (DATABASE_URL=postgresql://urna:urna@localhost:5433/urna)
+    npm run dev:frontend
+
+Simulando o deploy completo (mesmas imagens do Railway):
 
     docker compose up --build
     # backend:  http://localhost:3000/api/health
@@ -58,13 +83,15 @@ Isso usa os mesmos `Dockerfile`s do Railway, então um build que funciona aqui t
 boa chance de funcionar lá. Ver `docker-compose.yml` para os valores de exemplo
 (troque `JWT_SECRET` antes de usar fora de teste local).
 
-## 5. Checklist de segurança antes de ir ao ar
+## 6. Checklist de segurança antes de ir ao ar
 
 - [ ] `JWT_SECRET` é um valor aleatório gerado para produção, não o padrão de dev.
+- [ ] `DATABASE_URL` é uma **referência** ao serviço Postgres do Railway, nunca um
+      valor copiado à mão (evita senha real espalhada em `.env`/histórico).
 - [ ] `FRONTEND_URL` aponta exatamente para a URL pública do frontend (sem isso,
       toda chamada do navegador é bloqueada por CORS).
-- [ ] Volume montado em `/app/data` no backend (confirme com um redeploy de teste:
-      os dados devem continuar lá depois).
+- [ ] Volume montado em `/app/data` no backend, para as fotos de candidatos
+      (confirme com um redeploy de teste: as fotos devem continuar lá depois).
 - [ ] HTTPS: o Railway já serve cada serviço com TLS por padrão no domínio
       `*.up.railway.app` — se usar domínio próprio, configure o certificado nas
       configurações de domínio do serviço.

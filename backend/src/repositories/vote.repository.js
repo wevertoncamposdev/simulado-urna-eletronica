@@ -1,12 +1,23 @@
-import { createCollection } from '../database/index.js';
+import { prisma, serializeDates, serializeAll } from '../database/index.js';
 
-const collection = createCollection('votes');
+// `seq` só existe pra garantir a ordem de leitura — nunca sai do repository.
+const omitSeq = ({ seq, ...rest }) => rest;
 
 export const voteRepository = {
-  findAll: () => collection.findAll(),
-  findWhere: (predicate) => collection.findWhere(predicate),
-  create: (data) => collection.insert(data),
-  async countBySession(sessionId) {
-    return (await collection.findWhere((v) => v.sessionId === sessionId)).length;
+  async findAll() {
+    return serializeAll(await prisma.vote.findMany({ orderBy: { seq: 'asc' } })).map(omitSeq);
+  },
+
+  async findWhere(predicate) {
+    const all = serializeAll(await prisma.vote.findMany({ orderBy: { seq: 'asc' } })).map(omitSeq);
+    return all.filter(predicate);
+  },
+
+  async create(data) {
+    return omitSeq(serializeDates(await prisma.vote.create({ data })));
+  },
+
+  countBySession(sessionId) {
+    return prisma.vote.count({ where: { sessionId } });
   },
 };

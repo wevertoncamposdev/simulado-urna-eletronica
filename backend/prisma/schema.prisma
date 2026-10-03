@@ -1,0 +1,141 @@
+// Schema do PostgreSQL. Só este arquivo e os repositories (src/repositories/*.js +
+// src/database/index.js) conhecem o armazenamento — services e controllers não mudam.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  positions  Position[]
+  parties    Party[]
+  people     Person[]
+  candidates Candidate[]
+  sessions   Session[]
+  votes      Vote[]
+
+  @@map("users")
+}
+
+model Position {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label           String
+  code            String
+  digits          Int
+  order           Int
+  twoRoundEnabled Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, code])
+  @@map("positions")
+}
+
+model Party {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  acronym   String
+  number    Int
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+
+  candidates Candidate[]
+
+  @@unique([userId, number])
+  @@unique([userId, acronym])
+  @@map("parties")
+}
+
+model Person {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  photo     String?
+  createdAt DateTime @default(now())
+
+  candidates Candidate[]
+
+  @@map("people")
+}
+
+model Session {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  year        Int
+  // Lista de códigos de cargo habilitados nesta sessão (ver positions.code) — sem
+  // tabela de junção porque a ordem é só a de exibição, não uma relação consultável.
+  positions   String[]
+  status      String    @default("DRAFT")
+  publicToken String    @unique
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?
+  finishedAt  DateTime?
+
+  candidates Candidate[]
+  votes      Vote[]
+
+  @@map("sessions")
+}
+
+model Candidate {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  partyId   String
+  party     Party    @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  personId  String
+  person    Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  position  String
+  // Guardado como texto para preservar zeros à esquerda ("05").
+  number    String
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+
+  votes Vote[]
+
+  @@unique([sessionId, position, number])
+  @@map("candidates")
+}
+
+model Vote {
+  id              String     @id @default(uuid())
+  // Ordem exata de inserção, independente de timestamp (dois votos podem cair no
+  // mesmo milissegundo). A cadeia de hash (ver utils/hash.js) depende de reconferir
+  // os votos sempre na mesma ordem em que foram gravados.
+  seq             Int        @default(autoincrement())
+  userId          String
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId       String
+  session         Session    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  position        String
+  candidateId     String?
+  candidate       Candidate? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+  // Só gravado para auditoria quando um voto NULL digita um número sem candidato.
+  candidateNumber String?
+  type            String
+  createdAt       DateTime   @default(now())
+  // Cadeia de hashes (ver utils/hash.js): cada voto referencia o hash do anterior
+  // na mesma sessão. hash/previousHash não são recalculados pelo banco — são
+  // calculados pelo service antes do insert e só armazenados aqui.
+  hash            String
+  previousHash    String?
+
+  @@map("votes")
+}
