@@ -25,5 +25,14 @@
     "status": "ACTIVE",
     "createdAt": "2026-10-02T01:59:36.000Z",
     "userId": "48edbed3-71f0-44f3-b4a5-82ea7b693f42"
+  },
+  {
+    "id": "da028dc5-cb13-4daa-a4f9-91f44eb8e61c",
+    "name": "FFF",
+    "acronym": "FFF",
+    "number": 80,
+    "userId": "48edbed3-71f0-44f3-b4a5-82ea7b693f42",
+    "status": "ACTIVE",
+    "createdAt": "2026-10-02T20:50:43.470Z"
   }
 ]

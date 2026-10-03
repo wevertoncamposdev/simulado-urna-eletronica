@@ -6,7 +6,8 @@
     "order": 8,
     "code": "REPRESENTANTE",
     "userId": "48edbed3-71f0-44f3-b4a5-82ea7b693f42",
-    "createdAt": "2026-10-02T11:43:36.438Z"
+    "createdAt": "2026-10-02T11:43:36.438Z",
+    "twoRoundEnabled": true
   },
   {
     "id": "677f3bd7-afd1-4077-a84c-a40167791074",
