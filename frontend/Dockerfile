@@ -6,8 +6,11 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 # VITE_* é embutido no bundle em tempo de BUILD, não lido em runtime — por isso
-# precisa chegar como build arg (no Railway: configure em Settings → Build →
-# Build Arguments, com o mesmo nome) e não como variável de ambiente comum.
+# precisa chegar como ARG. No Railway isso vem da aba Variables normal do
+# serviço (não existe uma seção separada de "build arguments" lá — qualquer
+# variável com o mesmo nome de um ARG declarado aqui é repassada pro build
+# automaticamente). Só não se engane: mudar o valor depois exige um redeploy
+# (rebuild) — reiniciar o serviço sozinho não reprocessa o bundle já gerado.
 ARG VITE_API_URL=http://localhost:3000
 ENV VITE_API_URL=$VITE_API_URL
 # Diagnóstico temporário: aparece nos Build Logs do Railway (não nos Deploy

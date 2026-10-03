@@ -46,14 +46,19 @@ próprio `Dockerfile` — não existe backend/frontend num único container.
 ## 3. Frontend
 
 1. New Service → Deploy from GitHub repo → **Root Directory: `frontend`**.
-2. Build Argument (Settings → Build → Build Arguments — **não** em Variables, pois
-   `VITE_API_URL` é embutido no bundle em tempo de build, não lido em runtime):
+2. Em **Variables** (a aba normal — o Railway não tem uma seção separada de "build
+   arguments"; ele passa qualquer variável do serviço para o build automaticamente,
+   desde que o `Dockerfile` a declare com `ARG`, que é o que `frontend/Dockerfile`
+   já faz):
 
    | Nome | Valor |
    | --- | --- |
    | `VITE_API_URL` | URL pública do serviço backend (ex.: `https://urna-backend.up.railway.app`) |
 
-3. Nenhuma variável de ambiente é necessária em runtime — é um nginx servindo
+   Mesmo estando na aba "Variables", `VITE_API_URL` só é usada em **build time**
+   (embutida no bundle) — mudar o valor depois exige um **redeploy** (rebuild),
+   simples reiniciar o serviço não pega o novo valor.
+3. Nenhuma outra variável é necessária em runtime — é um nginx servindo
    arquivos estáticos. `PORT` é injetado pelo Railway e o nginx escuta nele
    automaticamente (`nginx.conf.template` + `envsubst`).
 
