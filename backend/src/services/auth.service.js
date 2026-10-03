@@ -255,4 +255,18 @@ export const authService = {
     if (!user) throw notFound('USER_NOT_FOUND', 'Usuário não encontrado.');
     return await sanitize(user);
   },
+
+  async changePassword(input, userId) {
+    const data = isPlainObject(input) ? input : {};
+    const user = await userRepository.findById(userId);
+    if (!user) throw notFound('USER_NOT_FOUND', 'Usuário não encontrado.');
+
+    if (typeof data.currentPassword !== 'string' || !verifyPassword(data.currentPassword, user.passwordHash)) {
+      throw unauthorized('CURRENT_PASSWORD_INVALID', 'Senha atual incorreta.');
+    }
+    assertPassword(data.newPassword);
+
+    await userRepository.updatePassword(userId, hashPassword(data.newPassword));
+    return { success: true };
+  },
 };

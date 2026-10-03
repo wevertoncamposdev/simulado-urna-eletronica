@@ -29,4 +29,8 @@ export const authController = {
   async me({ res, userId }) {
     sendSuccess(res, await authService.me(userId));
   },
+
+  async changePassword({ res, body, userId }) {
+    sendSuccess(res, await authService.changePassword(body, userId));
+  },
 };

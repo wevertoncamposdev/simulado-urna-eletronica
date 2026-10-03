@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Link, Outlet } from 'react-router-dom';
-import { LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { AlertTriangle, ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/branding/Logo';
 import { SessionStatusBadge } from '@/components/sessions/SessionStatusBadge';
 import { useAuth } from '@/hooks/useAuth';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
 import { cn } from '@/lib/utils';
+import { getNotifications } from '@/lib/notifications';
 import { MobileNav, Sidebar } from './Sidebar';
 
 const SIDEBAR_COLLAPSED_KEY = 'urna-sidebar-collapsed';
@@ -23,7 +25,9 @@ function readStoredCollapsed() {
 export function AppLayout() {
   const { session } = useCurrentSession();
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(readStoredCollapsed);
+  const notifications = getNotifications(user);
 
   function toggleSidebar() {
     setCollapsed((current) => {
@@ -75,10 +79,38 @@ export function AppLayout() {
               </>
             )}
             <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
-            <span className="hidden sm:inline">{user?.name}</span>
-            <Button type="button" variant="ghost" size="icon" onClick={logout} aria-label="Sair" title="Sair">
-              <LogOut />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" variant="ghost" className="relative gap-1.5 px-2">
+                  <span className="hidden sm:inline">{user?.name}</span>
+                  <ChevronDown className="size-3.5" />
+                  {notifications.length > 0 && (
+                    <span
+                      className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-danger ring-2 ring-card"
+                      aria-label={`${notifications.length} notificação pendente`}
+                    />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {notifications.length > 0 && (
+                  <>
+                    {notifications.map((notification) => (
+                      <DropdownMenuItem key={notification.id} onSelect={() => navigate(notification.to)}>
+                        <AlertTriangle className="text-danger" /> {notification.message}
+                      </DropdownMenuItem>
+                    ))}
+                    <div className="my-1 h-px bg-border" aria-hidden="true" />
+                  </>
+                )}
+                <DropdownMenuItem onSelect={() => navigate('/perfil')}>
+                  <Settings /> Configurações
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={logout}>
+                  <LogOut /> Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
         <MobileNav />

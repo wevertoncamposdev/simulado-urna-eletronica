@@ -105,9 +105,11 @@ export const api = {
     forgotPassword: (data) => request('/api/auth/forgot-password', { method: 'POST', body: data }),
     resetPassword: (data) => request('/api/auth/reset-password', { method: 'POST', body: data }),
     me: () => request('/api/auth/me'),
+    changePassword: (data) => request('/api/auth/change-password', { method: 'POST', body: data }),
   },
 
   institutionProfile: {
+    get: () => request('/api/institution-profile'),
     save: (data) => request('/api/institution-profile', { method: 'PUT', body: data }),
   },
 

@@ -39,6 +39,11 @@ export default function SessionCreate() {
       toast.success(editing ? 'Alterações salvas.' : 'Sessão criada.');
       navigate(`/sessoes/${saved.id}`);
     } catch (error) {
+      if (error.code === 'INSTITUTION_PROFILE_REQUIRED') {
+        toast.error(error.message);
+        navigate('/perfil');
+        return;
+      }
       setSubmitError(error);
       setSubmitting(false);
     }

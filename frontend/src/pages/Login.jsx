@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,15 +13,16 @@ const FIELD_RULES = [['EMAIL', 'email'], ['PASSWORD', 'password']];
 
 export default function Login() {
   const { status, login } = useAuth();
-  const location = useLocation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
+  // Sempre vai pro dashboard — nunca pra onde o usuário estava antes de ser
+  // desviado pro login (ver RequireAuth em App.jsx).
   if (status === 'authenticated') {
-    return <Navigate to={location.state?.from ?? '/painel'} replace />;
+    return <Navigate to="/painel" replace />;
   }
 
   const errorField = fieldOfError(error, FIELD_RULES);

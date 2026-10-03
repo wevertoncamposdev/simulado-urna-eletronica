@@ -10,6 +10,8 @@ incompatíveis sem aviso extra, como é comum nessa faixa de versão.
 
 ## [Não lançado]
 
+## [0.13.0] — 2026-10-03
+
 ### Added
 
 - **Confirmação de e-mail no cadastro (Etapa 8.1)**: `POST /api/auth/register` cria a conta e
@@ -27,12 +29,20 @@ incompatíveis sem aviso extra, como é comum nessa faixa de versão.
   30 minutos e de uso único (`POST /api/auth/reset-password`). A resposta de `forgot-password` é
   **sempre igual**, exista ou não o e-mail — não revela quais e-mails têm conta. Depois de
   redefinir, é preciso logar de novo com a senha nova (sem login automático).
-- **Perfil obrigatório da instituição (Etapa 8.3)**: toda conta (inclusive as já existentes)
-  precisa preencher nome, endereço, contato e site (opcional) da instituição antes de usar o
-  resto do sistema. Qualquer rota autenticada responde `403 INSTITUTION_PROFILE_REQUIRED`
-  enquanto o perfil não estiver completo (exceto `/api/auth/me` e a própria
-  `PUT /api/institution-profile`); o frontend redireciona automaticamente para
-  `/configurar-instituicao` nesse caso.
+- **Perfil da instituição (Etapa 8.3)**: nova entidade `InstitutionProfile` (1:1 com a conta) —
+  nome, endereço, contato e site (opcional) — com `GET`/`PUT /api/institution-profile`.
+- **Tela de perfil do usuário e obrigatoriedade na criação de sessão (Etapa 8.4)**: nova tela
+  `/perfil` (acessível pelo menu — antes só o nome da conta, agora um dropdown com
+  "Configurações" e "Sair") reúne os dados da conta, o formulário da instituição e a troca de
+  senha (`POST /api/auth/change-password`, exige a senha atual). Em vez de bloquear o sistema
+  inteiro (como a 8.3 fazia inicialmente), a exigência agora é pontual: `POST /api/sessions`
+  recusa criar sessão (`403 INSTITUTION_PROFILE_REQUIRED`) sem o perfil da instituição
+  cadastrado. Perfil incompleto não mostra mais um alerta fixo no Dashboard — vira uma
+  notificação (balão vermelho no menu do usuário, `lib/notifications.js`), primeiro caso de uma
+  estrutura pensada pra crescer com outras notificações depois. Telefone da instituição ganhou
+  máscara e validação (10 ou 11 dígitos com DDD) e o site passou a exigir um domínio com ponto
+  (`https://algo.com`, não só `https://algo`). Login sempre abre o Dashboard, mesmo quando o
+  usuário foi desviado pro login a partir de outra página.
 
 ## [0.12.0] — 2026-10-02
 

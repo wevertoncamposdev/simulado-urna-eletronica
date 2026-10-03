@@ -92,6 +92,7 @@ desloga sozinho se qualquer requisição voltar `401`. Senhas usam `scrypt` nati
 | POST | /api/auth/forgot-password | Envia link de redefinição por e-mail — resposta sempre igual, exista ou não o e-mail |
 | POST | /api/auth/reset-password | Define nova senha a partir do link (token de uso único, 30 min) — não devolve token |
 | GET | /api/auth/me | Dados da conta logada |
+| POST | /api/auth/change-password | Troca a senha (exige a senha atual) |
 
 ### Confirmação de e-mail (Etapa 8.1)
 
@@ -117,16 +118,22 @@ precisa entrar de novo com a senha nova. Limitação conhecida (ver `dev.md`): c
 stateless (JWT sem lista de revogação), um token emitido antes do reset continua válido até
 expirar.
 
-### Perfil obrigatório da instituição (Etapa 8.3)
+### Perfil da instituição e tela de perfil do usuário (Etapas 8.3 e 8.4)
 
-Toda conta — inclusive as criadas antes desta etapa — precisa preencher os dados da instituição
-que representa (nome, endereço, contato e site opcional, `PUT /api/institution-profile`) antes de
-usar qualquer outra parte do sistema. A checagem roda em `server.js` a cada requisição autenticada
-(`middleware/require-institution-profile.js`): sem perfil completo, qualquer rota responde
-`403 INSTITUTION_PROFILE_REQUIRED`, exceto `/api/auth/me` e a própria rota de salvar o perfil
-(marcadas `{ skipProfileCheck: true }` no `Router`, mesmo mecanismo do `{ public: true }` já usado
-pra rotas sem login). O frontend redireciona automaticamente para `/configurar-instituicao`
-nesse caso.
+Cada conta tem um `InstitutionProfile` próprio (nome, endereço, telefone, site opcional —
+`GET`/`PUT /api/institution-profile`). O telefone exige DDD (10 ou 11 dígitos, validado e
+formatado em `institution-profile.service.js`, com máscara no cliente); o site precisa de um
+domínio com ponto (`https://algo.com`, não só `https://algo`). A tela `/perfil` (menu do usuário
+no canto superior direito → "Configurações") reúne os dados da conta (somente leitura), o
+formulário da instituição e a troca de senha (`POST /api/auth/change-password`, pede a senha
+atual) — cada seção valida no cliente e no backend.
+
+Diferente de um gate global, a obrigatoriedade é pontual: `POST /api/sessions` recusa criar uma
+sessão (`403 INSTITUTION_PROFILE_REQUIRED`) enquanto a conta não tiver o perfil da instituição
+cadastrado — o resto do sistema funciona normalmente sem ele. Perfil incompleto
+(`user.institutionProfileComplete`, vindo de `/api/auth/me`/login/etc.) aparece como uma
+notificação — um balão no menu do usuário, não mais um alerta fixo no Dashboard
+(`frontend/src/lib/notifications.js`, pensado pra crescer com outras notificações no futuro).
 
 ## Link público de votação
 

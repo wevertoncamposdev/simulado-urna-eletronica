@@ -1,24 +1,16 @@
 // Roteador mínimo: converte "/api/sessions/:id" em regex e extrai os parâmetros.
-// `public: true` marca uma rota que não exige login; `skipProfileCheck: true` marca uma
-// rota protegida que não exige o perfil da instituição completo (ver server.js) — toda
-// rota protegida exige as duas coisas por padrão.
+// `public: true` marca uma rota que não exige login (ver server.js) — toda rota
+// é protegida por padrão.
 export class Router {
   #routes = [];
 
-  add(method, pattern, handler, { public: isPublic = false, skipProfileCheck = false } = {}) {
+  add(method, pattern, handler, { public: isPublic = false } = {}) {
     const keys = [];
     const source = pattern.replace(/:([A-Za-z]+)/g, (_, key) => {
       keys.push(key);
       return '([^/]+)';
     });
-    this.#routes.push({
-      method,
-      regex: new RegExp(`^${source}/?$`),
-      keys,
-      handler,
-      public: isPublic,
-      skipProfileCheck,
-    });
+    this.#routes.push({ method, regex: new RegExp(`^${source}/?$`), keys, handler, public: isPublic });
   }
 
   get(pattern, handler, options) { this.add('GET', pattern, handler, options); }
@@ -36,7 +28,7 @@ export class Router {
       route.keys.forEach((key, i) => {
         params[key] = decodeURIComponent(found[i + 1]);
       });
-      return { handler: route.handler, params, public: route.public, skipProfileCheck: route.skipProfileCheck };
+      return { handler: route.handler, params, public: route.public };
     }
     return null;
   }

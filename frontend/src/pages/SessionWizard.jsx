@@ -118,6 +118,11 @@ export default function SessionWizard() {
       select(saved);
       goTo(1);
     } catch (err) {
+      if (err.code === 'INSTITUTION_PROFILE_REQUIRED') {
+        toast.error(err.message);
+        navigate('/perfil');
+        return;
+      }
       setSessionError(err);
     } finally {
       setSessionSubmitting(false);
