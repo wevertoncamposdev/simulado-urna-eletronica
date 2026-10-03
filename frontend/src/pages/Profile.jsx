@@ -150,7 +150,7 @@ function InstitutionSection() {
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
             {!profile && (
-              <Alert>
+              <Alert variant="warning">
                 <AlertDescription>
                   Complete os dados abaixo — eles são obrigatórios para criar sessões eleitorais.
                 </AlertDescription>

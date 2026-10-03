@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Logo } from '@/components/branding/Logo';
+import { Wordmark } from '@/components/branding/Wordmark';
 import { useAuth } from '@/hooks/useAuth';
 import { fieldOfError } from '@/lib/form-errors';
 
@@ -49,7 +50,7 @@ export default function Login() {
       <div className="flex w-full max-w-sm flex-col gap-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <Link to="/"><Logo size={56} /></Link>
-          <h1 className="text-xl font-semibold">UrnaLab</h1>
+          <h1><Wordmark className="text-xl" /></h1>
           <p className="text-sm text-muted-foreground">Entre na sua conta para continuar.</p>
         </div>
 

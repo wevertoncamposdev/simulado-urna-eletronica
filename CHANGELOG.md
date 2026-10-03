@@ -10,6 +10,18 @@ incompatíveis sem aviso extra, como é comum nessa faixa de versão.
 
 ## [Não lançado]
 
+### Changed
+
+- **Identidade visual UrnaLab** (`identidade visual.md`): wordmark oficial ("urna" em azul
+  profundo + "lab" em verde, sempre minúsculo) substitui o texto "UrnaLab" solto no cabeçalho,
+  no menu lateral, na landing e no login (`components/branding/Wordmark.jsx`). Tipografia da
+  marca (Manrope para texto, Sora para títulos, IBM Plex Mono para dados técnicos — hashes,
+  números, códigos) carregada via Google Fonts. Novo tom de coral (`--coral`/`--coral-soft`,
+  único hex novo — o resto da paleta já existia no projeto) para alertas leves: a notificação de
+  perfil incompleto no menu do usuário e o aviso de perfil pendente no `/perfil` deixaram de usar
+  a cor de erro. E-mails transacionais (confirmação de e-mail, redefinição de senha) ganharam
+  layout com cabeçalho, wordmark e rodapé institucional, seguindo a mesma paleta do site.
+
 ## [0.13.0] — 2026-10-03
 
 ### Added

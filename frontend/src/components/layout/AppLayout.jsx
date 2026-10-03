@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/branding/Logo';
+import { Wordmark } from '@/components/branding/Wordmark';
 import { SessionStatusBadge } from '@/components/sessions/SessionStatusBadge';
 import { useAuth } from '@/hooks/useAuth';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
@@ -61,7 +62,7 @@ export function AppLayout() {
             {/* A sidebar já carrega a marca; aqui só reaparece quando ela some: no celular (sempre) ou quando o botão acima a recolhe. */}
             <div className={cn('flex items-center gap-2 md:hidden', collapsed && 'md:flex')}>
               <Logo size={28} />
-              <span className="font-medium">UrnaLab</span>
+              <Wordmark />
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -86,7 +87,7 @@ export function AppLayout() {
                   <ChevronDown className="size-3.5" />
                   {notifications.length > 0 && (
                     <span
-                      className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-danger ring-2 ring-card"
+                      className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-coral ring-2 ring-card"
                       aria-label={`${notifications.length} notificação pendente`}
                     />
                   )}
@@ -97,7 +98,7 @@ export function AppLayout() {
                   <>
                     {notifications.map((notification) => (
                       <DropdownMenuItem key={notification.id} onSelect={() => navigate(notification.to)}>
-                        <AlertTriangle className="text-danger" /> {notification.message}
+                        <AlertTriangle className="text-coral" /> {notification.message}
                       </DropdownMenuItem>
                     ))}
                     <div className="my-1 h-px bg-border" aria-hidden="true" />

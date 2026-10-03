@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Logo } from '@/components/branding/Logo';
+import { Wordmark } from '@/components/branding/Wordmark';
 import { useAuth } from '@/hooks/useAuth';
 
 const FEATURES = [
@@ -65,7 +66,7 @@ function PublicHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-2.5">
           <Logo size={36} />
-          <span className="font-semibold">UrnaLab</span>
+          <Wordmark className="text-lg" />
         </div>
         <nav className="flex items-center gap-2">
           <Button asChild variant="ghost">
