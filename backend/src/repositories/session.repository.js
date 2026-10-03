@@ -6,6 +6,12 @@ const collection = createCollection('sessions');
 export const sessionRepository = {
   findAllForUser: (userId) => collection.findWhere((record) => record.userId === userId),
   findById: (id) => collection.findById(id),
+  // Sem escopo por conta de propósito: o token em si já é a autorização (ver
+  // public-voting.service) — quem o tem pode votar, não importa quem é o dono.
+  async findByPublicToken(token) {
+    const records = await collection.findAll();
+    return records.find((record) => record.publicToken === token) ?? null;
+  },
   create: (data) => collection.insert(data),
   update: (id, data) => collection.update(id, data),
   remove: (id) => collection.delete(id),

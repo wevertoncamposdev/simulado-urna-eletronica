@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { BarChart3, Pencil, Play, ShieldCheck, Square, Users, Vote } from 'lucide-react';
+import { BarChart3, Copy, ExternalLink, Pencil, Play, ShieldCheck, Square, Users, Vote } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/layout/EmptyState';
 import { ErrorState } from '@/components/layout/ErrorState';
@@ -29,6 +30,45 @@ function Stat({ label, value }) {
       <CardContent className="flex flex-col gap-1 p-5">
         <span className="text-sm text-muted-foreground">{label}</span>
         <span className="text-2xl font-semibold tabular-nums">{value}</span>
+      </CardContent>
+    </Card>
+  );
+}
+
+async function copyPublicLink(url) {
+  try {
+    await navigator.clipboard.writeText(url);
+    toast.success('Link copiado.');
+  } catch {
+    toast.error('Não foi possível copiar. Copie o link manualmente.');
+  }
+}
+
+// Link público: funciona enquanto a sessão estiver aberta, sem precisar de
+// login — dá pra votar direto do celular. Para de funcionar sozinho ao finalizar.
+function PublicLinkCard({ publicToken }) {
+  const url = `${window.location.origin}/votar/${publicToken}`;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Link público de votação</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <p className="text-sm text-muted-foreground">
+          Qualquer pessoa com este link vota nesta sessão, sem precisar de conta — funciona bem
+          pelo celular. Ele para de funcionar sozinho quando a eleição for finalizada.
+        </p>
+        <div className="flex gap-2">
+          <Input readOnly value={url} onFocus={(e) => e.target.select()} className="font-mono text-xs" />
+          <Button type="button" variant="outline" size="icon" onClick={() => copyPublicLink(url)} aria-label="Copiar link" title="Copiar link">
+            <Copy />
+          </Button>
+          <Button type="button" variant="outline" size="icon" asChild>
+            <a href={url} target="_blank" rel="noreferrer" aria-label="Abrir em nova aba" title="Abrir em nova aba">
+              <ExternalLink />
+            </a>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
@@ -161,6 +201,8 @@ export default function SessionDetails() {
       <Alert>
         <AlertDescription>{STATUS_HINT[session.status]}</AlertDescription>
       </Alert>
+
+      {session.status === 'OPEN' && <PublicLinkCard publicToken={session.publicToken} />}
 
       <div className="grid grid-cols-3 gap-4">
         <Stat label="Cargos" value={formatNumber(session.positionsCount)} />

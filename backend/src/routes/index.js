@@ -6,6 +6,7 @@ import { registerHealthRoutes } from './health.routes.js';
 import { registerPartyRoutes } from './party.routes.js';
 import { registerPersonRoutes } from './person.routes.js';
 import { registerPositionRoutes } from './position.routes.js';
+import { registerPublicRoutes } from './public.routes.js';
 import { registerResultRoutes } from './result.routes.js';
 import { registerSessionRoutes } from './session.routes.js';
 import { registerVoteRoutes } from './vote.routes.js';
@@ -22,5 +23,6 @@ export function createRouter() {
   registerVoteRoutes(router);
   registerResultRoutes(router);
   registerAuditRoutes(router);
+  registerPublicRoutes(router);
   return router;
 }

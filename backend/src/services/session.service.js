@@ -4,6 +4,7 @@ import { positionRepository } from '../repositories/position.repository.js';
 import { voteRepository } from '../repositories/vote.repository.js';
 import { SESSION_LIMITS, SESSION_STATUS } from '../rules/session-rules.js';
 import { badRequest, conflict, notFound } from '../utils/errors.js';
+import { generatePublicToken } from '../utils/id.js';
 import { isPlainObject } from '../utils/object.js';
 
 // Valida e normaliza os dados vindos da requisição. Lança o primeiro erro encontrado.
@@ -52,13 +53,20 @@ async function findOrFail(id, userId) {
   return session;
 }
 
-// Acrescenta os totais que o dashboard e a tela de detalhes exibem.
+// Acrescenta os totais que o dashboard e a tela de detalhes exibem. Sessões
+// criadas antes do link público ganham um token na primeira leitura (preenche
+// sozinho, sem precisar de uma migração separada).
 async function withStats(session) {
+  let current = session;
+  if (!current.publicToken) {
+    current = await sessionRepository.update(current.id, { publicToken: generatePublicToken() });
+  }
+
   const [candidatesCount, votesCount] = await Promise.all([
-    candidateRepository.countBySession(session.id),
-    voteRepository.countBySession(session.id),
+    candidateRepository.countBySession(current.id),
+    voteRepository.countBySession(current.id),
   ]);
-  return { ...session, positionsCount: session.positions.length, candidatesCount, votesCount };
+  return { ...current, positionsCount: current.positions.length, candidatesCount, votesCount };
 }
 
 async function changeStatus(id, userId, { from, to, timestampField, errorMessage }) {
@@ -89,6 +97,7 @@ export const sessionService = {
     const session = await sessionRepository.create({
       ...data,
       userId,
+      publicToken: generatePublicToken(),
       status: SESSION_STATUS.DRAFT,
       createdAt: new Date().toISOString(),
       startedAt: null,

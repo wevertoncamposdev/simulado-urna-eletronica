@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, Maximize, Minimize, Vote } from 'lucide-react';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,14 +12,13 @@ import { EmptyState } from '@/components/layout/EmptyState';
 import { ErrorState } from '@/components/layout/ErrorState';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useAsync } from '@/hooks/useAsync';
+import { useBallotFlow } from '@/hooks/useBallotFlow';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
 import { useFullscreen } from '@/hooks/useFullscreen';
-import { playBallotConfirmedSound } from '@/lib/sound';
 import { api } from '@/services/api';
 
-// Tela de votação: um cargo por vez, na ordem da sessão, até fechar a cédula.
-// Todos os hooks ficam no topo (sem retorno condicional antes deles), já que o
-// React exige a mesma sequência de hooks em toda renderização.
+// Tela de votação (autenticada, com seletor de sessão): a cédula em si é o
+// useBallotFlow, reaproveitado também pelo link público (PublicVoting.jsx).
 export default function Voting() {
   const [searchParams] = useSearchParams();
   const { session: currentSession, select } = useCurrentSession();
@@ -29,75 +27,21 @@ export default function Voting() {
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen();
 
   const [sessionId, setSessionId] = useState(searchParams.get('sessionId') ?? currentSession?.id ?? '');
-  const [index, setIndex] = useState(0);
-  const [digits, setDigits] = useState('');
-  const [blank, setBlank] = useState(false);
-  const [lookup, setLookup] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [votesCast, setVotesCast] = useState(0);
-  const [closed, setClosed] = useState(false);
 
   const openSessions = (sessionsState.data ?? []).filter((s) => s.status === 'OPEN');
   const session = openSessions.find((s) => s.id === sessionId) ?? openSessions[0] ?? null;
   const rules = Object.fromEntries((positionsState.data ?? []).map((p) => [p.code, p]));
   const positions = (session?.positions ?? []).map((code) => rules[code]).filter(Boolean);
-  const rule = positions[index];
-  const ballotDone = session && index >= positions.length;
-  const ready = rule && (blank || (digits.length === rule.digits && lookup && !lookup.loading));
 
-  useEffect(() => {
-    if (!rule || !session || blank || digits.length !== rule.digits) {
-      setLookup(null);
-      return;
-    }
-    let active = true;
-    setLookup({ loading: true, result: null });
-    api.votes
-      .lookup({ sessionId: session.id, position: rule.code, number: digits })
-      .then((result) => {
-        if (active) setLookup({ loading: false, result });
-      })
-      .catch(() => {
-        if (active) setLookup({ loading: false, result: null });
-      });
-    return () => {
-      active = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [digits, blank, rule?.code, session?.id]);
-
-  // Teclado físico: dígitos, Backspace/Delete para corrigir, Enter para
-  // confirmar o voto (ou avançar para o próximo eleitor quando a cédula fecha).
-  useEffect(() => {
-    function handleKeyDown(event) {
-      if (closed) return;
-      const tag = event.target.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || event.target.isContentEditable) return;
-
-      if (ballotDone) {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          resetBallot();
-        }
-        return;
-      }
-      if (!rule || submitting) return;
-
-      if (event.key >= '0' && event.key <= '9') {
-        event.preventDefault();
-        pressDigit(event.key);
-      } else if (event.key === 'Backspace' || event.key === 'Delete') {
-        event.preventDefault();
-        clearEntry();
-      } else if (event.key === 'Enter' && ready) {
-        event.preventDefault();
-        confirmVote();
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rule, submitting, ready, ballotDone, closed]);
+  const ballot = useBallotFlow({
+    positions,
+    enabled: Boolean(session),
+    lookupVote: (position, number) => api.votes.lookup({ sessionId: session.id, position, number }),
+    submitVote: ({ position, type, number }) =>
+      api.votes.create({ sessionId: session.id, position, type, number, confirmed: true }),
+    onBallotComplete: () => sessionsState.reload(),
+  });
+  const { rule, digits, blank, lookup, submitting, votesCast, closed, ballotDone, ready, index } = ballot;
 
   const error = sessionsState.error ?? positionsState.error;
   if (error) {
@@ -132,63 +76,7 @@ export default function Voting() {
     setSessionId(value);
     const next = openSessions.find((s) => s.id === value);
     if (next) select(next);
-    resetBallot();
-  }
-
-  function resetBallot() {
-    setIndex(0);
-    setDigits('');
-    setBlank(false);
-    setLookup(null);
-    setClosed(false);
-  }
-
-  function clearEntry() {
-    setDigits('');
-    setBlank(false);
-  }
-
-  function pressDigit(digit) {
-    setBlank(false);
-    setDigits((current) => (rule && current.length < rule.digits ? current + digit : current));
-  }
-
-  function pressBlank() {
-    setDigits('');
-    setBlank(true);
-  }
-
-  async function confirmVote() {
-    const type = blank ? 'BLANK' : lookup?.result?.status === 'FOUND' ? 'VALID' : 'NULL';
-    setSubmitting(true);
-    try {
-      await api.votes.create({
-        sessionId: session.id,
-        position: rule.code,
-        type,
-        number: blank ? undefined : digits,
-        confirmed: true,
-      });
-      setDigits('');
-      setBlank(false);
-      setLookup(null);
-      const next = index + 1;
-      setIndex(next);
-      if (next >= positions.length) {
-        setVotesCast((count) => count + 1);
-        sessionsState.reload();
-        playBallotConfirmedSound();
-      }
-    } catch (err) {
-      if (err.code === 'VOTE_SESSION_NOT_OPEN') {
-        setClosed(true);
-        toast.error('A votação desta sessão foi encerrada.');
-      } else {
-        toast.error(err.message);
-      }
-    } finally {
-      setSubmitting(false);
-    }
+    ballot.resetBallot();
   }
 
   const sessionPicker = openSessions.length > 1 && (
@@ -251,15 +139,15 @@ export default function Voting() {
               {votesCast === 1 ? '1 cédula registrada nesta urna.' : `${votesCast} cédulas registradas nesta urna.`}
             </p>
           </div>
-          <Button onClick={resetBallot}>Próximo eleitor</Button>
+          <Button onClick={ballot.resetBallot}>Próximo eleitor</Button>
         </Card>
       ) : (
         <>
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="text-center text-xs text-muted-foreground md:text-sm">
             Cargo {index + 1} de {positions.length}
           </p>
-          <div className="grid gap-6 md:grid-cols-[1fr_280px]">
-            <div className="flex flex-col gap-4">
+          <div className="grid gap-3 md:grid-cols-[1fr_280px] md:gap-6">
+            <div className="order-2 flex flex-col gap-2 md:order-1 md:gap-4">
               <BallotCard
                 positionCode={rule.code}
                 positionLabel={rule.label}
@@ -267,15 +155,17 @@ export default function Voting() {
                 digitsRequired={rule.digits}
                 blank={blank}
               />
-              <VoteKeypad onDigit={pressDigit} onClear={clearEntry} onBlank={pressBlank} disabled={submitting} />
-              <p className="text-center text-xs text-muted-foreground">
+              <VoteKeypad onDigit={ballot.pressDigit} onClear={ballot.clearEntry} onBlank={ballot.pressBlank} disabled={submitting} />
+              <p className="hidden text-center text-xs text-muted-foreground md:block">
                 Também dá para digitar no teclado do computador e confirmar com Enter.
               </p>
-              <Button className="h-12 text-base" disabled={!ready || submitting} onClick={confirmVote}>
+              <Button className="h-11 text-base md:h-12" disabled={!ready || submitting} onClick={ballot.confirmVote}>
                 {submitting ? 'Confirmando...' : 'Confirma'}
               </Button>
             </div>
-            <CandidatePreviewPanel blank={blank} lookup={lookup} />
+            <div className="order-1 md:order-2">
+              <CandidatePreviewPanel blank={blank} lookup={lookup} />
+            </div>
           </div>
         </>
       )}

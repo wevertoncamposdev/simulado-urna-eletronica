@@ -154,4 +154,12 @@ export const api = {
   audit: {
     get: (sessionId) => request(`/api/sessions/${sessionId}/audit`),
   },
+
+  // Link público de votação: sem login, o token é a própria autorização.
+  public: {
+    getSession: (token) => request(`/api/public/sessions/${token}`),
+    lookup: (token, params) => request(`/api/public/sessions/${token}/votes/lookup${toQuery(params)}`),
+    createVote: (token, data) => request(`/api/public/sessions/${token}/votes`, { method: 'POST', body: data }),
+    getResults: (token) => request(`/api/public/sessions/${token}/results`),
+  },
 };

@@ -129,23 +129,32 @@ async function tallySession(session) {
   };
 }
 
+// Reaproveitada pela apuração autenticada (por id) e pelo link público (por
+// token) — quem chama já resolveu a sessão, aqui só falta montar a apuração.
+async function buildResultsPayload(session) {
+  requireFinished(session);
+  const { positions } = await tallySession(session);
+
+  return {
+    session: {
+      id: session.id,
+      name: session.name,
+      year: session.year,
+      status: session.status,
+      finishedAt: session.finishedAt,
+    },
+    positions,
+  };
+}
+
 export const resultService = {
   async getBySession(id, userId) {
     const session = await findSessionOrFail(id, userId);
-    requireFinished(session);
+    return buildResultsPayload(session);
+  },
 
-    const { positions } = await tallySession(session);
-
-    return {
-      session: {
-        id: session.id,
-        name: session.name,
-        year: session.year,
-        status: session.status,
-        finishedAt: session.finishedAt,
-      },
-      positions,
-    };
+  async getForSession(session) {
+    return buildResultsPayload(session);
   },
 
   // Monta a sessão do 2º turno: mesmo(s) cargo(s) que não tiveram maioria

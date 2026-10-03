@@ -10,11 +10,13 @@ import Login from '@/pages/Login';
 import Parties from '@/pages/Parties';
 import People from '@/pages/People';
 import Positions from '@/pages/Positions';
+import PublicVoting from '@/pages/PublicVoting';
 import Register from '@/pages/Register';
 import Results from '@/pages/Results';
 import SessionCreate from '@/pages/SessionCreate';
 import SessionDetails from '@/pages/SessionDetails';
 import Sessions from '@/pages/Sessions';
+import SessionWizard from '@/pages/SessionWizard';
 import Timeline from '@/pages/Timeline';
 import Voting from '@/pages/Voting';
 
@@ -39,9 +41,11 @@ export default function App() {
       <Routes>
         <Route path="login" element={<Login />} />
         <Route path="registro" element={<Register />} />
+        <Route path="votar/:token" element={<PublicVoting />} />
         <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
           <Route index element={<Dashboard />} />
           <Route path="sessoes" element={<Sessions />} />
+          <Route path="sessoes/assistente" element={<SessionWizard />} />
           <Route path="sessoes/nova" element={<SessionCreate />} />
           <Route path="sessoes/:id" element={<SessionDetails />} />
           <Route path="sessoes/:id/editar" element={<SessionCreate />} />
