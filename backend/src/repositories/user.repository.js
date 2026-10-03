@@ -19,4 +19,10 @@ export const userRepository = {
       throw error;
     }
   },
+
+  async markEmailVerified(id) {
+    return serializeDates(
+      await prisma.user.update({ where: { id }, data: { emailVerifiedAt: new Date() } }),
+    );
+  },
 };

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +13,7 @@ const FIELD_RULES = [['NAME', 'name'], ['EMAIL', 'email'], ['PASSWORD', 'passwor
 
 export default function Register() {
   const { status, register } = useAuth();
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,6 +33,7 @@ export default function Register() {
     setError(null);
     try {
       await register(name, email, password);
+      navigate('/confirmar-email', { state: { email } });
     } catch (err) {
       setError(err);
       setSubmitting(false);

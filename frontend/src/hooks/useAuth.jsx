@@ -41,16 +41,24 @@ export function AuthProvider({ children }) {
     setStatus('authenticated');
   }, []);
 
-  const register = useCallback(async (name, email, password) => {
-    const { user: newUser, token } = await api.auth.register({ name, email, password });
+  // Não loga sozinho — a conta sai sem token até confirmar o e-mail (ver verifyEmail).
+  const register = useCallback(
+    (name, email, password) => api.auth.register({ name, email, password }),
+    [],
+  );
+
+  const verifyEmail = useCallback(async (email, code) => {
+    const { user: verifiedUser, token } = await api.auth.verifyEmail({ email, code });
     setAuthToken(token);
-    setUser(newUser);
+    setUser(verifiedUser);
     setStatus('authenticated');
   }, []);
 
+  const resendVerification = useCallback((email) => api.auth.resendVerification({ email }), []);
+
   const value = useMemo(
-    () => ({ user, status, login, register, logout }),
-    [user, status, login, register, logout],
+    () => ({ user, status, login, register, verifyEmail, resendVerification, logout }),
+    [user, status, login, register, verifyEmail, resendVerification, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

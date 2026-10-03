@@ -10,6 +10,19 @@ incompatíveis sem aviso extra, como é comum nessa faixa de versão.
 
 ## [Não lançado]
 
+### Added
+
+- **Confirmação de e-mail no cadastro (Etapa 8.1)**: `POST /api/auth/register` cria a conta e
+  envia um código de 6 dígitos por e-mail (via [Resend](https://resend.com)), mas não devolve
+  mais token — só depois de confirmado (`POST /api/auth/verify-email`) a conta recebe acesso.
+  `POST /api/auth/login` passa a recusar contas não confirmadas (`EMAIL_NOT_VERIFIED`, 403); o
+  frontend redireciona automaticamente para a tela de confirmação nesse caso. Código expira em
+  15 minutos, tem limite de 5 tentativas e reenvio (`POST /api/auth/resend-verification`) tem
+  cooldown de 60 segundos. Contas criadas antes desta mudança foram retroagidas como já
+  confirmadas (migração `add_email_verification`), para não trancar quem já tinha conta.
+  Variáveis novas: `RESEND_API_KEY`, `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME` (ver
+  `backend/.env.example` e `DEPLOY.md`).
+
 ## [0.12.0] — 2026-10-02
 
 ### Added

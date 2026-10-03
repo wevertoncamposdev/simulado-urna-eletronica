@@ -22,6 +22,14 @@ if (!process.env.DATABASE_URL) {
   throw new Error('[config] DATABASE_URL é obrigatório (string de conexão do PostgreSQL).');
 }
 
+// Confirmação de e-mail (Etapa 8.1) depende do Resend pra funcionar de ponta a ponta —
+// sem essas três, falhar aqui é melhor do que falhar silenciosamente no primeiro cadastro.
+for (const name of ['RESEND_API_KEY', 'EMAIL_FROM_ADDRESS', 'EMAIL_FROM_NAME']) {
+  if (!process.env[name]) {
+    throw new Error(`[config] ${name} é obrigatório (confirmação de e-mail via Resend).`);
+  }
+}
+
 // FRONTEND_URL aceita uma ou mais origens separadas por vírgula — por exemplo,
 // "http://localhost:5173,http://192.168.0.10:5173" pra liberar o próprio
 // computador (localhost) e o celular (IP da rede local) ao mesmo tempo.
@@ -43,4 +51,7 @@ export const config = {
     : path.join(backendRoot, 'data'),
   allowedOrigins,
   jwtSecret: process.env.JWT_SECRET || DEV_JWT_SECRET,
+  resendApiKey: process.env.RESEND_API_KEY,
+  emailFromAddress: process.env.EMAIL_FROM_ADDRESS,
+  emailFromName: process.env.EMAIL_FROM_NAME,
 };

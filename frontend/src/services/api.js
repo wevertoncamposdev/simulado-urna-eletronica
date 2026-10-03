@@ -100,6 +100,8 @@ export const api = {
   auth: {
     register: (data) => request('/api/auth/register', { method: 'POST', body: data }),
     login: (data) => request('/api/auth/login', { method: 'POST', body: data }),
+    verifyEmail: (data) => request('/api/auth/verify-email', { method: 'POST', body: data }),
+    resendVerification: (data) => request('/api/auth/resend-verification', { method: 'POST', body: data }),
     me: () => request('/api/auth/me'),
   },
 

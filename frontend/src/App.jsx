@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { useAuth } from '@/hooks/useAuth';
 import Audit from '@/pages/Audit';
 import Candidates from '@/pages/Candidates';
+import ConfirmEmail from '@/pages/ConfirmEmail';
 import Dashboard from '@/pages/Dashboard';
 import ElectoralSystem from '@/pages/ElectoralSystem';
 import Landing from '@/pages/Landing';
@@ -43,6 +44,7 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="login" element={<Login />} />
         <Route path="registro" element={<Register />} />
+        <Route path="confirmar-email" element={<ConfirmEmail />} />
         <Route path="votar/:token" element={<PublicVoting />} />
         <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
           <Route path="painel" element={<Dashboard />} />
