@@ -6,6 +6,7 @@ import Audit from '@/pages/Audit';
 import Candidates from '@/pages/Candidates';
 import Dashboard from '@/pages/Dashboard';
 import ElectoralSystem from '@/pages/ElectoralSystem';
+import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
 import Parties from '@/pages/Parties';
 import People from '@/pages/People';
@@ -39,11 +40,12 @@ export default function App() {
   return (
     <>
       <Routes>
+        <Route path="/" element={<Landing />} />
         <Route path="login" element={<Login />} />
         <Route path="registro" element={<Register />} />
         <Route path="votar/:token" element={<PublicVoting />} />
         <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
-          <Route index element={<Dashboard />} />
+          <Route path="painel" element={<Dashboard />} />
           <Route path="sessoes" element={<Sessions />} />
           <Route path="sessoes/assistente" element={<SessionWizard />} />
           <Route path="sessoes/nova" element={<SessionCreate />} />

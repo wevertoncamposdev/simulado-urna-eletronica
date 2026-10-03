@@ -10,6 +10,22 @@ incompatíveis sem aviso extra, como é comum nessa faixa de versão.
 
 ## [Não lançado]
 
+## [0.12.0] — 2026-10-02
+
+### Added
+
+- **Landing page e identidade visual (UrnaLab)**: `/` agora é uma landpage pública (antes era o
+  Dashboard autenticado, que passou para `/painel`) — hero com o banner da marca, cards das
+  funcionalidades reais (urna, apuração, auditoria com cadeia de hash, link público de votação,
+  isolamento por conta), seção "como funciona" e CTA para criar conta ou entrar. A logo oficial
+  (`frontend/public/img/urnalab-logo.png`) substitui o ícone genérico em toda a borda do app —
+  sidebar, cabeçalho mobile, telas de login/registro, votação pública e favicon da aba.
+
+### Fixed
+
+- Card "Estado do sistema" do Dashboard ainda rotulava o banco como "armazenamento JSON" —
+  resquício da migração para PostgreSQL (0.11.0). Agora mostra "Banco de dados (PostgreSQL)".
+
 ## [0.11.0] — 2026-10-02
 
 ### Changed

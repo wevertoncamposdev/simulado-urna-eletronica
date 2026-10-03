@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { LogOut, PanelLeftClose, PanelLeftOpen, Vote } from 'lucide-react';
+import { LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/branding/Logo';
 import { SessionStatusBadge } from '@/components/sessions/SessionStatusBadge';
 import { useAuth } from '@/hooks/useAuth';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
@@ -55,10 +56,8 @@ export function AppLayout() {
             </Button>
             {/* A sidebar já carrega a marca; aqui só reaparece quando ela some: no celular (sempre) ou quando o botão acima a recolhe. */}
             <div className={cn('flex items-center gap-2 md:hidden', collapsed && 'md:flex')}>
-              <div className="flex size-7 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-                <Vote className="size-3.5" />
-              </div>
-              <span className="font-medium">Simulador de Eleição</span>
+              <Logo size={28} />
+              <span className="font-medium">UrnaLab</span>
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">

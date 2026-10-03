@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
-import { Vote } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
+import { Logo } from '@/components/branding/Logo';
 import { useAuth } from '@/hooks/useAuth';
 import { fieldOfError } from '@/lib/form-errors';
 
@@ -20,7 +20,7 @@ export default function Login() {
   const [error, setError] = useState(null);
 
   if (status === 'authenticated') {
-    return <Navigate to={location.state?.from ?? '/'} replace />;
+    return <Navigate to={location.state?.from ?? '/painel'} replace />;
   }
 
   const errorField = fieldOfError(error, FIELD_RULES);
@@ -42,10 +42,8 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-muted/30 p-6">
       <div className="flex w-full max-w-sm flex-col gap-6">
         <div className="flex flex-col items-center gap-2 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-            <Vote className="size-6" />
-          </div>
-          <h1 className="text-xl font-semibold">Simulador de Urna</h1>
+          <Link to="/"><Logo size={56} /></Link>
+          <h1 className="text-xl font-semibold">UrnaLab</h1>
           <p className="text-sm text-muted-foreground">Entre na sua conta para continuar.</p>
         </div>
 

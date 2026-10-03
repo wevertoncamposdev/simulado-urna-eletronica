@@ -10,6 +10,7 @@ import { VoteKeypad } from '@/components/voting/VoteKeypad';
 import { EmptyState } from '@/components/layout/EmptyState';
 import { ErrorState } from '@/components/layout/ErrorState';
 import { PositionResult } from '@/components/results/PositionResult';
+import { Logo } from '@/components/branding/Logo';
 import { useAsync } from '@/hooks/useAsync';
 import { useBallotFlow } from '@/hooks/useBallotFlow';
 import { api } from '@/services/api';
@@ -154,9 +155,7 @@ function PublicShell({ title, subtitle, children }) {
     <div className="min-h-screen bg-muted/30 p-3 md:p-6">
       <div className="mx-auto flex max-w-4xl flex-col gap-2 md:gap-4">
         <div className="flex flex-col items-center gap-0.5 pt-1 text-center md:gap-1 md:pt-4">
-          <div className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground md:size-10">
-            <Vote className="size-4 md:size-5" />
-          </div>
+          <Logo size={36} />
           {title && <h1 className="text-base font-semibold md:text-lg">{title}{subtitle ? ` (${subtitle})` : ''}</h1>}
           <p className="hidden text-xs text-muted-foreground md:block">Projeto educacional. Não é uma urna eletrônica oficial.</p>
         </div>

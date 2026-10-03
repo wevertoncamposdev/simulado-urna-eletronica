@@ -13,6 +13,7 @@ import {
   Vote,
   Wand2,
 } from 'lucide-react';
+import { Logo } from '@/components/branding/Logo';
 import { cn } from '@/lib/utils';
 
 // Agrupado por momento do fluxo (não por ordem alfabética ou de criação):
@@ -21,7 +22,7 @@ import { cn } from '@/lib/utils';
 const NAV_GROUPS = [
   {
     label: null,
-    items: [{ label: 'Dashboard', to: '/', icon: LayoutDashboard }],
+    items: [{ label: 'Dashboard', to: '/painel', icon: LayoutDashboard }],
   },
   {
     label: 'Montar a eleição',
@@ -55,7 +56,7 @@ function NavItem({ label, to, icon: Icon, accent }) {
   return (
     <NavLink
       to={to}
-      end={to === '/'}
+      end={to === '/painel'}
       className={({ isActive }) =>
         cn(
           'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
@@ -90,11 +91,9 @@ export function Sidebar({ collapsed }) {
   return (
     <aside className="hidden w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-          <Vote className="size-4" />
-        </div>
+        <Logo size={32} />
         <div className="flex flex-col leading-tight">
-          <span className="text-sm font-semibold text-white">Simulador de Eleição</span>
+          <span className="text-sm font-semibold text-white">UrnaLab</span>
           <span className="text-[11px] text-sidebar-foreground/70">Urna eletrônica educacional</span>
         </div>
       </div>
@@ -133,7 +132,7 @@ export function MobileNav() {
             <NavLink
               key={to}
               to={to}
-              end={to === '/'}
+              end={to === '/painel'}
               className={({ isActive }) =>
                 cn(
                   'flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-sm',

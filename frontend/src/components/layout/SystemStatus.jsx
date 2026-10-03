@@ -27,7 +27,7 @@ export function SystemStatus() {
       <CardHeader className="flex-row items-start justify-between">
         <div className="flex flex-col gap-1">
           <CardTitle>Estado do sistema</CardTitle>
-          <CardDescription>Verificação da API e do armazenamento JSON.</CardDescription>
+          <CardDescription>Verificação da API e do banco de dados.</CardDescription>
         </div>
         <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
           <RefreshCw className={loading ? 'animate-spin' : ''} /> Verificar de novo
@@ -46,7 +46,7 @@ export function SystemStatus() {
             />
             <StatusRow
               icon={Database}
-              label="Armazenamento JSON"
+              label="Banco de dados (PostgreSQL)"
               ok={Boolean(data?.storage.ok)}
               detail={data ? 'Leitura e gravação pelo repository' : 'Verificando...'}
             />
