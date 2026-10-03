@@ -10,6 +10,10 @@ RUN npm ci
 # Build Arguments, com o mesmo nome) e não como variável de ambiente comum.
 ARG VITE_API_URL=http://localhost:3000
 ENV VITE_API_URL=$VITE_API_URL
+# Diagnóstico temporário: aparece nos Build Logs do Railway (não nos Deploy
+# Logs) — confirma se o Build Argument realmente chegou até aqui antes de
+# compilar. Não é segredo, pode ficar visível no log sem problema.
+RUN echo "[build] VITE_API_URL=$VITE_API_URL"
 
 COPY . .
 RUN npm run build
