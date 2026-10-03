@@ -73,7 +73,7 @@ export function SessionForm({ positions, initial, error, submitting, submitLabel
             <Label
               key={position.code}
               htmlFor={`position-${position.code}`}
-              className="flex cursor-pointer items-center gap-3 rounded-md border bg-card px-3 py-2.5 font-normal hover:bg-muted/50"
+              className="flex cursor-pointer items-center gap-3 rounded-lg border bg-card px-3 py-2.5 font-normal hover:bg-muted/50"
             >
               <Checkbox
                 id={`position-${position.code}`}
