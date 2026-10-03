@@ -18,6 +18,14 @@ export const authController = {
     sendSuccess(res, await authService.resendVerification(body));
   },
 
+  async forgotPassword({ res, body }) {
+    sendSuccess(res, await authService.forgotPassword(body));
+  },
+
+  async resetPassword({ res, body }) {
+    sendSuccess(res, await authService.resetPassword(body));
+  },
+
   async me({ res, userId }) {
     sendSuccess(res, await authService.me(userId));
   },

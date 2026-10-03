@@ -1,11 +1,15 @@
 import { randomInt, createHash } from 'node:crypto';
+import { config } from '../config.js';
 import { emailVerificationRepository } from '../repositories/email-verification.repository.js';
+import { passwordResetRepository } from '../repositories/password-reset.repository.js';
 import { positionRepository } from '../repositories/position.repository.js';
 import { userRepository } from '../repositories/user.repository.js';
 import { EMAIL_VERIFICATION_RULES } from '../rules/email-verification-rules.js';
+import { PASSWORD_RESET_RULES } from '../rules/password-reset-rules.js';
 import { USER_LIMITS } from '../rules/user-rules.js';
 import { emailService } from './email.service.js';
 import { badRequest, conflict, forbidden, notFound, tooManyRequests, unauthorized } from '../utils/errors.js';
+import { generatePublicToken } from '../utils/id.js';
 import { signJwt } from '../utils/jwt.js';
 import { isPlainObject, normalizeText } from '../utils/object.js';
 import { hashPassword, verifyPassword } from '../utils/password.js';
@@ -82,6 +86,7 @@ function generateVerificationCode() {
 }
 
 const hashCode = (code) => createHash('sha256').update(code).digest('hex');
+const hashResetToken = (token) => createHash('sha256').update(token).digest('hex');
 
 async function issueVerificationCode(user) {
   const code = generateVerificationCode();
@@ -189,6 +194,53 @@ export const authService = {
 
     await issueVerificationCode(user);
     return { sent: true };
+  },
+
+  // Sempre devolve a mesma coisa, exista ou não o e-mail, ou mesmo se o cooldown impedir
+  // o reenvio — nunca deixar a resposta (ou o tempo dela) revelar se uma conta existe.
+  async forgotPassword(input) {
+    const data = isPlainObject(input) ? input : {};
+    const email = normalizeEmail(data.email);
+
+    const user = await userRepository.findByEmail(email);
+    if (user) {
+      const pending = await passwordResetRepository.findByUserId(user.id);
+      const withinCooldown =
+        pending &&
+        (Date.now() - new Date(pending.createdAt).getTime()) / 1000 < PASSWORD_RESET_RULES.resendCooldownSeconds;
+
+      if (!withinCooldown) {
+        const token = generatePublicToken();
+        const expiresAt = new Date(Date.now() + PASSWORD_RESET_RULES.ttlMinutes * 60 * 1000);
+        await passwordResetRepository.upsertForUser(user.id, { tokenHash: hashResetToken(token), expiresAt });
+
+        const resetUrl = `${config.frontendUrl}/redefinir-senha/${token}`;
+        try {
+          await emailService.sendPasswordResetLink(user.email, resetUrl);
+        } catch (error) {
+          console.error('[email] falha ao enviar link de redefinição de senha', error);
+        }
+      }
+    }
+
+    return { sent: true };
+  },
+
+  async resetPassword(input) {
+    const data = isPlainObject(input) ? input : {};
+    const token = typeof data.token === 'string' ? data.token.trim() : '';
+    if (!token) throw badRequest('RESET_TOKEN_REQUIRED', 'Link inválido.');
+    assertPassword(data.password);
+
+    const pending = await passwordResetRepository.findByTokenHash(hashResetToken(token));
+    if (!pending || new Date(pending.expiresAt) < new Date()) {
+      throw badRequest('RESET_TOKEN_INVALID', 'Esse link não é mais válido. Peça um novo.');
+    }
+
+    await userRepository.updatePassword(pending.userId, hashPassword(data.password));
+    await passwordResetRepository.deleteByUserId(pending.userId);
+
+    return { success: true };
   },
 
   async me(userId) {

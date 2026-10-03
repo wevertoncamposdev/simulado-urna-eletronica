@@ -77,6 +77,11 @@ export default function Login() {
                   autoComplete="current-password"
                 />
               </FormField>
+              <div className="text-right text-sm">
+                <Link to="/esqueci-senha" className="font-medium text-foreground underline">
+                  Esqueci minha senha
+                </Link>
+              </div>
               <Button type="submit" className="mt-2" disabled={submitting}>
                 {submitting ? 'Entrando...' : 'Entrar'}
               </Button>

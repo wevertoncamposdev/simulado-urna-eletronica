@@ -56,9 +56,26 @@ export function AuthProvider({ children }) {
 
   const resendVerification = useCallback((email) => api.auth.resendVerification({ email }), []);
 
+  const forgotPassword = useCallback((email) => api.auth.forgotPassword({ email }), []);
+
+  const resetPassword = useCallback(
+    (token, password) => api.auth.resetPassword({ token, password }),
+    [],
+  );
+
   const value = useMemo(
-    () => ({ user, status, login, register, verifyEmail, resendVerification, logout }),
-    [user, status, login, register, verifyEmail, resendVerification, logout],
+    () => ({
+      user,
+      status,
+      login,
+      register,
+      verifyEmail,
+      resendVerification,
+      forgotPassword,
+      resetPassword,
+      logout,
+    }),
+    [user, status, login, register, verifyEmail, resendVerification, forgotPassword, resetPassword, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

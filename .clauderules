@@ -1,6 +1,7 @@
 # Contexto do projeto — Simulador de Urna Eletrônica (educacional)
 
-Regra principal: Responda sempre em PT-BR
+Regra principal: Responda sempre em PT-BR — isso vale pra tudo: texto pro usuário, perguntas,
+e também as descrições de chamadas de ferramenta (ex.: o campo "description" do Bash).
 
 Projeto de estudo (Node.js puro no backend + React no frontend) para praticar HTTP, APIs REST,
 arquitetura em camadas, persistência e deploy real. **Não é uma urna eletrônica oficial** e não
@@ -116,6 +117,28 @@ env) ou CORS — não reimplementar essas decisões do zero.
   ao começar uma tarefa, a menos que o usuário diga o contrário.
 - Promoção `develop` → `main` é manual e de responsabilidade do usuário; o assistente prepara/
   commita em `develop`, mas não decide quando "ir para produção".
+
+## Como desenvolver cada etapa
+
+Pra cada subitem do `PLANO.md` (8.1, 8.2, 8.3...), o padrão é executar do início ao fim até
+funcionar — não parar no meio pra confirmar decisões de design que já são claras a partir do
+próprio `PLANO.md`, do código existente ou do padrão já estabelecido nas etapas anteriores:
+
+- **Não entrar em modo de planejamento (EnterPlanMode) nem usar AskUserQuestion por padrão** pra
+  cada nova etapa — já temos escopo, convenções (ver 8.1/8.2 como referência de como uma etapa
+  fica pronta) e o `PLANO.md` descrevendo o que cada subitem precisa. Só parar e perguntar quando
+  for algo que só o usuário pode decidir de verdade (ex.: uma credencial que falta, uma mudança de
+  comportamento visível que não está no `PLANO.md`) — não pra validar abordagem técnica que já
+  seguiria o padrão do resto do código.
+- **Focar só na funcionalidade pedida.** Se notar algo fora do escopo (drift, comentário solto,
+  nome inconsistente), só mexer nisso se isso efetivamente travar a etapa atual (como a correção
+  do drift de índices do Prisma na 8.1, que impedia gerar a migração do jeito certo) — caso
+  contrário, deixar passar, ou no máximo citar numa frase no resumo final, sem parar pra agir ali.
+- Testar de ponta a ponta (backend via curl, build do frontend) antes de reportar como pronto,
+  do jeito que já foi feito na 8.1 e na 8.2 — isso continua valendo.
+- Ambiente de teste: backend e frontend rodam direto no Windows (não em Docker no dia a dia); o
+  Postgres roda no WSL. O `docker-compose.yml`/Dockerfiles só são ajustados ao final, se a
+  mudança exigir (ex.: variável de ambiente nova).
 
 ## Convenções de trabalho
 

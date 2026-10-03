@@ -61,6 +61,11 @@ compromisso nem uma ordem — é um banco de ideias para escolher o que estudar 
   de "o hash só prova algo se alguém guardou uma cópia de fora".
 - **Autenticação de mesário** antes de abrir/finalizar uma sessão ou editar candidatos — hoje
   essas ações não pedem nenhuma credencial.
+- **Revogar tokens JWT emitidos antes de um reset de senha** (Etapa 8.2): hoje a autenticação é
+  stateless (sem lista de revogação) — um token emitido antes do reset continua válido até
+  expirar (7 dias) mesmo depois da senha trocar. Resolver isso exigiria algum estado no servidor
+  (lista de tokens revogados, ou um campo `tokenVersion`/`passwordChangedAt` no `User` checado a
+  cada requisição autenticada), o que é uma mudança de arquitetura, não só do fluxo de senha.
 
 ## Qualidade e testes
 

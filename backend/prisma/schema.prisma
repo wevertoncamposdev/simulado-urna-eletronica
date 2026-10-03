@@ -27,6 +27,7 @@ model User {
   sessions              Session[]
   votes                 Vote[]
   emailVerificationCode EmailVerificationCode?
+  passwordResetToken    PasswordResetToken?
 
   @@map("users")
 }
@@ -43,6 +44,20 @@ model EmailVerificationCode {
   createdAt DateTime @default(now())
 
   @@map("email_verification_codes")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // sha256 do token do link — nunca o valor em texto puro. Diferente do código de 6
+  // dígitos, aqui não há limite de tentativas: 18 bytes aleatórios não são alvo de
+  // força bruta prática, a defesa é só a expiração e o uso único (ver auth.service.js).
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
 }
 
 model Position {

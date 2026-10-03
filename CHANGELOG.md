@@ -22,6 +22,11 @@ incompatíveis sem aviso extra, como é comum nessa faixa de versão.
   confirmadas (migração `add_email_verification`), para não trancar quem já tinha conta.
   Variáveis novas: `RESEND_API_KEY`, `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME` (ver
   `backend/.env.example` e `DEPLOY.md`).
+- **Reset de senha (Etapa 8.2)**: "Esqueci minha senha" no login (`POST /api/auth/forgot-
+  password`) envia um link de redefinição por e-mail (reaproveita o Resend da 8.1), válido por
+  30 minutos e de uso único (`POST /api/auth/reset-password`). A resposta de `forgot-password` é
+  **sempre igual**, exista ou não o e-mail — não revela quais e-mails têm conta. Depois de
+  redefinir, é preciso logar de novo com a senha nova (sem login automático).
 
 ## [0.12.0] — 2026-10-02
 

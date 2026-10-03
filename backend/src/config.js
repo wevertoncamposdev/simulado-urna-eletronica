@@ -50,6 +50,9 @@ export const config = {
     ? path.resolve(process.env.DATA_PATH)
     : path.join(backendRoot, 'data'),
   allowedOrigins,
+  // Primeira origem configurada em FRONTEND_URL — convenção do projeto pra "a URL
+  // canônica do frontend", usada pra montar links de e-mail (ver forgotPassword).
+  frontendUrl: allowedOrigins[0],
   jwtSecret: process.env.JWT_SECRET || DEV_JWT_SECRET,
   resendApiKey: process.env.RESEND_API_KEY,
   emailFromAddress: process.env.EMAIL_FROM_ADDRESS,

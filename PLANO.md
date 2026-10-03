@@ -38,14 +38,14 @@ instituição que representa antes de usar o sistema.
 - [x] Variáveis novas documentadas em `backend/.env.example` e `DEPLOY.md`
       (`RESEND_API_KEY`, remetente).
 
-### 8.2 — Reset de senha — `planejado`
+### 8.2 — Reset de senha — `concluído` (2026-10-03)
 
-- [ ] Novo model para token de reset (token, expiração, usado/não usado).
-- [ ] `POST /api/auth/forgot-password` (sempre responde sucesso, mesmo se o e-mail não existir —
+- [x] Novo model para token de reset (token, expiração, usado/não usado).
+- [x] `POST /api/auth/forgot-password` (sempre responde sucesso, mesmo se o e-mail não existir —
       não revelar quais e-mails têm conta) envia o link/código por e-mail (reaproveita
       `email.service.js` do 8.1).
-- [ ] `POST /api/auth/reset-password` (token + nova senha).
-- [ ] Frontend: "esqueci minha senha" no login, tela de definir nova senha.
+- [x] `POST /api/auth/reset-password` (token + nova senha).
+- [x] Frontend: "esqueci minha senha" no login, tela de definir nova senha.
 
 ### 8.3 — Perfil obrigatório da instituição — `planejado`
 

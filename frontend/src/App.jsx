@@ -7,6 +7,7 @@ import Candidates from '@/pages/Candidates';
 import ConfirmEmail from '@/pages/ConfirmEmail';
 import Dashboard from '@/pages/Dashboard';
 import ElectoralSystem from '@/pages/ElectoralSystem';
+import ForgotPassword from '@/pages/ForgotPassword';
 import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
 import Parties from '@/pages/Parties';
@@ -14,6 +15,7 @@ import People from '@/pages/People';
 import Positions from '@/pages/Positions';
 import PublicVoting from '@/pages/PublicVoting';
 import Register from '@/pages/Register';
+import ResetPassword from '@/pages/ResetPassword';
 import Results from '@/pages/Results';
 import SessionCreate from '@/pages/SessionCreate';
 import SessionDetails from '@/pages/SessionDetails';
@@ -45,6 +47,8 @@ export default function App() {
         <Route path="login" element={<Login />} />
         <Route path="registro" element={<Register />} />
         <Route path="confirmar-email" element={<ConfirmEmail />} />
+        <Route path="esqueci-senha" element={<ForgotPassword />} />
+        <Route path="redefinir-senha/:token" element={<ResetPassword />} />
         <Route path="votar/:token" element={<PublicVoting />} />
         <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
           <Route path="painel" element={<Dashboard />} />

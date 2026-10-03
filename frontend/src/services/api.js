@@ -102,6 +102,8 @@ export const api = {
     login: (data) => request('/api/auth/login', { method: 'POST', body: data }),
     verifyEmail: (data) => request('/api/auth/verify-email', { method: 'POST', body: data }),
     resendVerification: (data) => request('/api/auth/resend-verification', { method: 'POST', body: data }),
+    forgotPassword: (data) => request('/api/auth/forgot-password', { method: 'POST', body: data }),
+    resetPassword: (data) => request('/api/auth/reset-password', { method: 'POST', body: data }),
     me: () => request('/api/auth/me'),
   },
 

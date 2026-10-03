@@ -25,4 +25,8 @@ export const userRepository = {
       await prisma.user.update({ where: { id }, data: { emailVerifiedAt: new Date() } }),
     );
   },
+
+  async updatePassword(id, passwordHash) {
+    return serializeDates(await prisma.user.update({ where: { id }, data: { passwordHash } }));
+  },
 };

@@ -89,6 +89,8 @@ desloga sozinho se qualquer requisição voltar `401`. Senhas usam `scrypt` nati
 | POST | /api/auth/verify-email | Confirma o código de 6 dígitos; só então devolve o token |
 | POST | /api/auth/resend-verification | Reenvia o código (cooldown de 60s) |
 | POST | /api/auth/login | Autentica e devolve o token — recusa (`EMAIL_NOT_VERIFIED`, 403) enquanto o e-mail não for confirmado |
+| POST | /api/auth/forgot-password | Envia link de redefinição por e-mail — resposta sempre igual, exista ou não o e-mail |
+| POST | /api/auth/reset-password | Define nova senha a partir do link (token de uso único, 30 min) — não devolve token |
 | GET | /api/auth/me | Dados da conta logada |
 
 ### Confirmação de e-mail (Etapa 8.1)
@@ -102,6 +104,18 @@ o cadastro — a conta já foi criada e o usuário pode pedir reenvio depois; o 
 servidor (`[email] falha ao enviar código de verificação`). Contas criadas antes desta
 funcionalidade existir foram retroagidas como confirmadas na própria migração, para não trancar
 quem já tinha conta.
+
+### Reset de senha (Etapa 8.2)
+
+"Esqueci minha senha" no login manda um link de redefinição por e-mail (mesmo
+`email.service.js` da 8.1), com token opaco de uso único válido por 30 minutos — mesmo padrão do
+link público de votação (`generatePublicToken`, `utils/id.js`), só que de uso único e enviado por
+e-mail. `POST /api/auth/forgot-password` **sempre** responde `{ sent: true }`, exista ou não o
+e-mail e mesmo que o reenvio esteja em cooldown (60s) — a resposta nunca revela se uma conta
+existe. Depois de `POST /api/auth/reset-password`, o usuário não é logado automaticamente —
+precisa entrar de novo com a senha nova. Limitação conhecida (ver `dev.md`): como a autenticação é
+stateless (JWT sem lista de revogação), um token emitido antes do reset continua válido até
+expirar.
 
 ## Link público de votação
 
