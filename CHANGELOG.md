@@ -10,6 +10,8 @@ incompatíveis sem aviso extra, como é comum nessa faixa de versão.
 
 ## [Não lançado]
 
+## [0.11.0] — 2026-10-02
+
 ### Changed
 
 - **Banco de dados: JSON em arquivo → PostgreSQL (Prisma)**. Só os repositories
