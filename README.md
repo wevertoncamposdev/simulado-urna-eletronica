@@ -18,7 +18,31 @@ significa reescrever os repositories, sem tocar em controllers, services, routes
     npm run dev:backend     # http://localhost:3000  (teste: /api/health)
     npm run dev:frontend    # http://localhost:5173
 
-Variáveis do backend: `PORT`, `HOST`, `DATA_PATH`, `FRONTEND_URL`, `JWT_SECRET`. Frontend: `VITE_API_URL`.
+Variáveis do backend: `PORT`, `HOST`, `DATA_PATH`, `FRONTEND_URL`, `JWT_SECRET`, `NODE_ENV`
+(ver `backend/.env.example`). Frontend: `VITE_API_URL` (ver `frontend/.env.example`).
+
+## Deploy em produção
+
+Guia completo (Docker + Railway, variáveis de ambiente, volume persistente,
+checklist de segurança) em [DEPLOY.md](DEPLOY.md). Resumo: cada pasta (`backend/`,
+`frontend/`) tem seu próprio `Dockerfile` e `railway.json`; teste localmente com
+`docker compose up --build` antes de subir.
+
+Por padrão os dois servidores só aceitam conexão da própria máquina. Para acessar de outro
+aparelho na mesma rede (ex.: votar pelo celular pelo link público), descubra o IP local da máquina
+(`ipconfig`, procure "Endereço IPv4") e rode:
+
+    # backend (PowerShell)
+    $env:HOST="0.0.0.0"; $env:FRONTEND_URL="http://localhost:5173,http://SEU_IP:5173"; npm run dev:backend
+
+    # frontend — defina VITE_API_URL=http://SEU_IP:3000 no frontend/.env e rode normalmente
+    npm run dev:frontend
+
+O Vite já escuta em todas as interfaces por padrão (`server.host: true`); o terminal mostra o
+endereço de rede ao subir. Pode ser necessário liberar as portas 3000 e 5173 no firewall do
+Windows. Isso só abre acesso dentro da mesma rede (Wi-Fi/LAN) — para acesso pela internet, use um
+túnel (ex.: `ngrok http 5173`) ou um deploy de verdade; nenhuma das duas formas está configurada
+aqui, já que o projeto não usa HTTPS nem outros cuidados de produção.
 
 ## Armazenamento JSON
 
@@ -37,6 +61,21 @@ se qualquer requisição voltar `401`. Senhas usam `scrypt` nativo do Node (`uti
 | POST | /api/auth/register | Cria a conta (nome, e-mail, senha) e já devolve o token |
 | POST | /api/auth/login | Autentica e devolve o token |
 | GET | /api/auth/me | Dados da conta logada |
+
+## Link público de votação
+
+Toda sessão tem um `publicToken` (aleatório, sem relação com o id) desde que criada — sessões mais
+antigas ganham o token na primeira vez que forem abertas (`GET /api/sessions` ou `/:id`). Enquanto
+a sessão está `OPEN`, o link `/votar/:token` do frontend vota nela sem precisar de conta; funciona
+bem pelo celular. Ele para de aceitar voto sozinho fora do estado `OPEN` — o token em si é a
+autorização, não há usuário por trás. O front reaproveita a mesma lógica da cédula (hook
+`useBallotFlow`) tanto na votação autenticada quanto no link público.
+
+| Método | Rota | Descrição |
+| --- | --- | --- |
+| GET | /api/public/sessions/:token | Nome, cargos e status da sessão (sem dados sensíveis) |
+| GET | /api/public/sessions/:token/votes/lookup | Prévia do candidato pelo número, igual à votação autenticada |
+| POST | /api/public/sessions/:token/votes | Registra o voto — só funciona com a sessão `OPEN` |
 
 Cada conta é isolada das demais: cargos, partidos, pessoas, candidatos, sessões e votos carregam
 um `userId`, filtrado em todo repository e service (isolamento lógico — mesmo arquivo JSON,
