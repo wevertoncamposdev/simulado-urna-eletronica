@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 import { sessionRepository } from '../repositories/session.repository.js';
 
 export const healthService = {
@@ -15,6 +16,9 @@ export const healthService = {
       uptimeSeconds: Math.round(process.uptime()),
       timestamp: new Date().toISOString(),
       storage,
+      // Diagnóstico temporário (não é segredo) — confirma de fora qual
+      // FRONTEND_URL o processo realmente carregou, sem precisar vasculhar logs.
+      allowedOrigins: config.allowedOrigins,
     };
   },
 };
