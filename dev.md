@@ -67,13 +67,29 @@ compromisso nem uma ordem — é um banco de ideias para escolher o que estudar 
 
 ## Experiência da urna (votação)
 
-- **Acessibilidade**: navegação 100% por teclado na tela de votação, leitor de tela, modo de
-  alto contraste — importante justamente por ser uma simulação de urna eletrônica.
-- **Múltiplos terminais por sessão**: hoje a tela de votação funciona bem para um terminal único;
+- ~~**Múltiplos terminais por sessão**: hoje a tela de votação funciona bem para um terminal único;
   seria interessante simular várias urnas votando na mesma sessão ao mesmo tempo (já é seguro
-  pela trava de concorrência, falta só a UX de "qual terminal sou eu").
-- **Modo quiosque**: tela cheia, bloqueio de navegação do navegador, timeout que volta pro
-  cargo 1 se o eleitor ficar inativo — mais fiel ao comportamento de uma urna real.
+  pela trava de concorrência, falta só a UX de "qual terminal sou eu").~~ (concluído, por outro
+  caminho: **link público de votação** — cada sessão tem um token único; enquanto `OPEN`, qualquer
+  pessoa com o link vota pelo próprio celular, sem conta. Para de funcionar sozinho ao finalizar.
+  A cédula virou um hook compartilhado — `useBallotFlow` — entre a votação autenticada e a pública.)
+- **Acessibilidade**: navegação 100% por teclado na tela de votação (já dá pra digitar e confirmar
+  com Enter), leitor de tela, modo de alto contraste — importante justamente por ser uma simulação
+  de urna eletrônica.
+- **Modo quiosque**: tela cheia (já existe) e menu recolhível (já existe); falta bloqueio de
+  navegação do navegador e timeout que volta pro cargo 1 se o eleitor ficar inativo.
+- ~~**Organization chart no "Sistema eleitoral"**: trocar os cards de cargo por uma hierarquia
+  visual (Executivo/Legislativo × Federal/Estadual/Municipal), com o card de detalhe abrindo ao
+  clicar no cargo — mesmo conteúdo que já existe, só mais visual.~~ (concluído: componente
+  `OrgChart` genérico — reaproveitável futuramente pra mostrar candidatos vencedores de uma sessão
+  nas mesmas posições — e a página virou uma landpage em seções, com modo imersivo de tela cheia.)
+- ~~**Assistente de criação de sessão**: um wizard guiado (sessão → partidos → pessoas →
+  candidatos → revisão) pra quem está começando não precisar adivinhar a ordem certa de
+  cadastro.~~ (concluído: `/sessoes/assistente`, reaproveitando os diálogos de cadastro já
+  existentes.)
+- ~~**Identidade visual única**: paleta, raio de borda e menu lateral revisados pra um design mais
+  coeso entre as telas (desktop e mobile).~~ (concluído: tokens em `styles/globals.css`, sidebar
+  reorganizada em grupos, componentes de base com visual mais consistente.)
 
 ## Operação
 

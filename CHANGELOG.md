@@ -10,6 +10,54 @@ incompatíveis sem aviso extra, como é comum nessa faixa de versão.
 
 ## [Não lançado]
 
+## [0.10.0] — 2026-10-02
+
+### Added
+
+- **Acesso pela rede local**: Vite agora escuta em todas as interfaces (`server.host: true`), e o
+  CORS do backend aceita uma lista de origens (`FRONTEND_URL` separado por vírgula) em vez de uma
+  só — dá pra usar o app por `localhost` e pelo IP da rede ao mesmo tempo (ex.: votar pelo link
+  público direto do celular). Ver README para os comandos.
+- **Resultado no link público**: quando a sessão votada pelo link público é finalizada, a mesma
+  tela passa a mostrar a apuração por cargo (igual à tela de Resultados autenticada), em vez de só
+  avisar que a votação encerrou.
+- **Organograma do sistema eleitoral**: a página "Sistema eleitoral brasileiro" virou uma landpage
+  (uma seção por conceito — poderes, esferas, sistema de votação, turnos — com botão pra rolar de
+  uma pra outra) terminando num organograma clicável dos cargos (Poder x Esfera de governo); clicar
+  num cargo abre o detalhe dele. Tem um modo imersivo (overlay de tela cheia com rolagem própria,
+  Esc fecha) pra acompanhar a explicação inteira em foco. O componente `OrgChart` é genérico —
+  pensado para, futuramente, mostrar os candidatos vencedores de uma sessão nas mesmas posições.
+- **Assistente guiado de nova eleição** (`/sessoes/assistente`): cria a sessão e, passo a passo,
+  cadastra partidos, pessoas e candidatos (reaproveitando os mesmos diálogos das telas normais),
+  terminando num resumo com a opção de abrir a votação direto. Pensado pra quem está usando o
+  simulador pela primeira vez e não sabe por onde começar.
+- **Identidade visual**: paleta e raio de borda revisados (tokens em `styles/globals.css`), menu
+  lateral reorganizado em grupos (Montar a eleição, Dia da votação, Conteúdo) com uma cor de
+  destaque própria para o Assistente, e os componentes de base (botão, card, badge, input, select,
+  diálogo) com um visual mais coeso entre si.
+
+### Changed
+
+- **Tela de votação no celular**: painel da foto do candidato passou a aparecer acima do teclado
+  (antes vinha depois), e os elementos (dígitos, botões, espaçamento) encolheram o suficiente pra
+  caber na tela de um celular sem precisar rolar — sem mudar o layout do desktop.
+
+## [0.9.0] — 2026-10-02
+
+### Added
+
+- **Link público de votação**: cada sessão ganha um token único e aleatório; enquanto a sessão
+  está `OPEN`, a tela da sessão mostra um link (`/votar/:token`) que qualquer pessoa pode abrir
+  pelo celular pra votar, sem precisar de conta. O link para de funcionar sozinho quando a eleição
+  é finalizada (ou ainda não foi aberta). Sessões criadas antes dessa funcionalidade ganham o
+  token automaticamente na primeira vez que forem abertas.
+
+### Changed
+
+- A lógica da cédula de votação (dígitos, teclado físico, consulta do candidato, confirmação) foi
+  extraída pra um hook compartilhado (`useBallotFlow`), reaproveitado pela votação autenticada e
+  pelo link público — a mesma experiência dos dois lados, sem duplicar a parte mais delicada.
+
 ## [0.8.0] — 2026-10-02
 
 ### Added
