@@ -17,10 +17,12 @@ RUN npm ci
 COPY src ./src
 
 # Fotos de candidatos continuam em arquivo (o resto dos dados foi para o
-# Postgres via Prisma) — monte um volume aqui (ver docker-compose.yml /
-# Railway Volumes). Sem volume, as fotos somem a cada deploy.
+# Postgres via Prisma). Sem instrução VOLUME aqui de propósito — o Railway
+# rejeita o build com ela (usa Railway Volumes, configurado no dashboard do
+# serviço, não no Dockerfile); localmente o docker-compose.yml já declara o
+# volume. Sem montar um volume de verdade em /app/data (Railway Volumes ou
+# docker-compose), as fotos somem a cada deploy/recriação do container.
 RUN mkdir -p /app/data && chown -R node:node /app
-VOLUME ["/app/data"]
 ENV DATA_PATH=/app/data
 
 # Imagem node:*-alpine já traz o usuário "node" (não-root) pronto pra uso.
