@@ -118,7 +118,7 @@ function CandidateForm({ candidate, sessions, parties, positions, people, defaul
           </SelectContent>
         </Select>
         {selectedPerson && (
-          <div className="mt-1 flex items-center gap-3 rounded-md border bg-card p-2">
+          <div className="mt-1 flex items-center gap-3 rounded-lg border bg-card p-2">
             <CandidateAvatar name={selectedPerson.name} photo={selectedPerson.photo} />
             <div className="text-sm font-medium">{selectedPerson.name}</div>
           </div>

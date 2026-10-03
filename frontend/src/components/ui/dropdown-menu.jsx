@@ -10,7 +10,7 @@ export function DropdownMenuContent({ className, ...props }) {
       <Primitive.Content
         align="end"
         sideOffset={4}
-        className={cn('z-50 min-w-40 rounded-md border bg-card p-1 shadow-md', className)}
+        className={cn('z-50 min-w-40 rounded-lg border bg-card p-1 shadow-md', className)}
         {...props}
       />
     </Primitive.Portal>

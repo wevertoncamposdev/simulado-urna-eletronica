@@ -94,7 +94,7 @@ function PositionForm({ position, onSaved, onCancel }) {
           />
         </FormField>
       </div>
-      <Label htmlFor="position-two-round" className="flex cursor-pointer items-start gap-3 rounded-md border bg-card px-3 py-2.5 font-normal">
+      <Label htmlFor="position-two-round" className="flex cursor-pointer items-start gap-3 rounded-lg border bg-card px-3 py-2.5 font-normal">
         <Checkbox
           id="position-two-round"
           checked={twoRoundEnabled}

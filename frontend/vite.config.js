@@ -9,5 +9,7 @@ const srcPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: { alias: { '@': srcPath } },
-  server: { port: 5173 },
+  // host: true faz o Vite escutar em todas as interfaces (não só localhost) —
+  // necessário pra abrir o app a partir de outro aparelho na mesma rede.
+  server: { port: 5173, host: true },
 });

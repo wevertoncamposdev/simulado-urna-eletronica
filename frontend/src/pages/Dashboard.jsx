@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Plus, Vote } from 'lucide-react';
+import { Plus, Vote, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -79,10 +79,10 @@ export default function Dashboard() {
               <EmptyState
                 icon={Vote}
                 title="Nenhuma sessão eleitoral ainda"
-                description="Crie a primeira sessão para começar a cadastrar candidatos e votar."
+                description="O assistente guiado ajuda a cadastrar tudo (sessão, partidos, pessoas e candidatos) na ordem certa."
                 action={
                   <Button asChild>
-                    <Link to="/sessoes/nova">Criar primeira sessão</Link>
+                    <Link to="/sessoes/assistente"><Wand2 /> Criar com o assistente</Link>
                   </Button>
                 }
               />

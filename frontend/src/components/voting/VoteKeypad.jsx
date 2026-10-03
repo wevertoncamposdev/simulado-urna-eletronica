@@ -10,7 +10,7 @@ export function VoteKeypad({ onDigit, onClear, onBlank, disabled }) {
       key={digit}
       type="button"
       variant="outline"
-      className="h-14 text-lg"
+      className="h-11 text-base md:h-14 md:text-lg"
       disabled={disabled}
       onClick={() => onDigit(digit)}
     >
@@ -19,13 +19,13 @@ export function VoteKeypad({ onDigit, onClear, onBlank, disabled }) {
   );
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-3 gap-1.5 md:gap-2">
       {DIGIT_ROWS.flat().map(digitButton)}
-      <Button type="button" variant="outline" className="h-14" disabled={disabled} onClick={onBlank}>
+      <Button type="button" variant="outline" className="h-11 text-sm md:h-14 md:text-base" disabled={disabled} onClick={onBlank}>
         Branco
       </Button>
       {digitButton('0')}
-      <Button type="button" variant="outline" className="h-14" disabled={disabled} onClick={onClear}>
+      <Button type="button" variant="outline" className="h-11 text-sm md:h-14 md:text-base" disabled={disabled} onClick={onClear}>
         <Delete /> Corrige
       </Button>
     </div>

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ClipboardList, Plus } from 'lucide-react';
+import { ClipboardList, Plus, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,9 +19,14 @@ export default function Sessions() {
         title="Eleições"
         description="Todas as sessões eleitorais do simulador."
         actions={
-          <Button asChild>
-            <Link to="/sessoes/nova"><Plus /> Nova sessão</Link>
-          </Button>
+          <>
+            <Button asChild variant="outline">
+              <Link to="/sessoes/assistente"><Wand2 /> Assistente guiado</Link>
+            </Button>
+            <Button asChild>
+              <Link to="/sessoes/nova"><Plus /> Nova sessão</Link>
+            </Button>
+          </>
         }
       />
 
@@ -33,10 +38,10 @@ export default function Sessions() {
         <EmptyState
           icon={ClipboardList}
           title="Nenhuma sessão criada"
-          description="Uma sessão define o ano e os cargos que estarão em disputa."
+          description="Uma sessão define o ano e os cargos que estarão em disputa. O assistente guiado ajuda a cadastrar tudo (partidos, pessoas e candidatos) na ordem certa."
           action={
             <Button asChild>
-              <Link to="/sessoes/nova">Criar sessão</Link>
+              <Link to="/sessoes/assistente"><Wand2 /> Criar com o assistente</Link>
             </Button>
           }
         />

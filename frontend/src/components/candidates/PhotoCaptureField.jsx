@@ -90,12 +90,12 @@ export function PhotoCaptureField({ id, value, onChange, disabled }) {
 
   if (capturing) {
     return (
-      <div className="flex flex-col items-center gap-2 rounded-md border bg-muted/30 p-3">
+      <div className="flex flex-col items-center gap-2 rounded-lg border bg-muted/30 p-3">
         {snapshot ? (
           <img
             src={snapshot}
             alt="Prévia da foto capturada"
-            className="aspect-[4/3] w-full max-w-xs rounded-md bg-black object-cover"
+            className="aspect-[4/3] w-full max-w-xs rounded-lg bg-black object-cover"
           />
         ) : (
           // eslint-disable-next-line jsx-a11y/media-has-caption
@@ -105,7 +105,7 @@ export function PhotoCaptureField({ id, value, onChange, disabled }) {
             playsInline
             muted
             style={{ transform: 'scaleX(-1)' }}
-            className="aspect-[4/3] w-full max-w-xs rounded-md bg-black object-cover"
+            className="aspect-[4/3] w-full max-w-xs rounded-lg bg-black object-cover"
           />
         )}
         <div className="flex gap-2">
@@ -129,9 +129,9 @@ export function PhotoCaptureField({ id, value, onChange, disabled }) {
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-3">
         {previewUrl ? (
-          <img src={previewUrl} alt="" className="size-16 shrink-0 rounded-md object-cover" />
+          <img src={previewUrl} alt="" className="size-16 shrink-0 rounded-lg object-cover" />
         ) : (
-          <div className="flex size-16 shrink-0 items-center justify-center rounded-md border border-dashed text-muted-foreground">
+          <div className="flex size-16 shrink-0 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
             <Camera className="size-5" />
           </div>
         )}

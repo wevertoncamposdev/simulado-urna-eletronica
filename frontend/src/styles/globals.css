@@ -1,23 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4f5f7;
-  --foreground: #151a22;
+  --background: #f5f6fa;
+  --foreground: #161b26;
   --card: #ffffff;
-  --card-foreground: #151a22;
-  --primary: #2b3fd6;
+  --card-foreground: #161b26;
+  --primary: #2c3ed9;
   --primary-foreground: #ffffff;
-  --muted: #eceef2;
-  --muted-foreground: #596273;
-  --border: #dde0e6;
-  --ring: #2b3fd6;
+  --accent: #d98b1f;
+  --accent-foreground: #2a1a03;
+  --accent-soft: #fbead0;
+  --muted: #eceef4;
+  --muted-foreground: #5c6478;
+  --border: #dfe2ea;
+  --ring: #2c3ed9;
   --success: #12795a;
   --success-soft: #dff3ec;
   --danger: #b42318;
   --danger-soft: #fde7e4;
-  --sidebar: #151a22;
-  --sidebar-foreground: #c9ceda;
-  --radius: 0.5rem;
+  --sidebar: #171c3a;
+  --sidebar-accent: #242b57;
+  --sidebar-foreground: #c6cbe8;
+  --radius: 0.75rem;
 }
 
 @theme inline {
@@ -27,6 +31,9 @@
   --color-card-foreground: var(--card-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
@@ -36,10 +43,12 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-sidebar: var(--sidebar);
+  --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-foreground: var(--sidebar-foreground);
-  --radius-sm: calc(var(--radius) - 2px);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
 }
 
 @layer base {

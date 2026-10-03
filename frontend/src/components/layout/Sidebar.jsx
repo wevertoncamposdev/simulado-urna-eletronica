@@ -1,65 +1,151 @@
 import { NavLink } from 'react-router-dom';
-import { BarChart3, BookOpen, Briefcase, ClipboardList, Flag, History, IdCard, LayoutDashboard, ShieldCheck, Users, Vote } from 'lucide-react';
+import {
+  BarChart3,
+  BookOpen,
+  Briefcase,
+  ClipboardList,
+  Flag,
+  History,
+  IdCard,
+  LayoutDashboard,
+  ShieldCheck,
+  Users,
+  Vote,
+  Wand2,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const NAV_ITEMS = [
-  { label: 'Dashboard', to: '/', icon: LayoutDashboard },
-  { label: 'Eleições', to: '/sessoes', icon: ClipboardList },
-  { label: 'Cargos', to: '/cargos', icon: Briefcase },
-  { label: 'Partidos', to: '/partidos', icon: Flag },
-  { label: 'Pessoas', to: '/pessoas', icon: IdCard },
-  { label: 'Candidatos', to: '/candidatos', icon: Users },
-  { label: 'Votação', to: '/votacao', icon: Vote },
-  { label: 'Resultados', to: '/resultados', icon: BarChart3 },
-  { label: 'Auditoria', to: '/auditoria', icon: ShieldCheck },
-  { label: 'Sistema eleitoral', to: '/sistema-eleitoral', icon: BookOpen },
-  { label: 'Linha do tempo', to: '/linha-do-tempo', icon: History },
+// Agrupado por momento do fluxo (não por ordem alfabética ou de criação):
+// visão geral primeiro, depois tudo que monta uma eleição, depois o que
+// acontece no dia da votação, e por fim o conteúdo de referência/estudo.
+const NAV_GROUPS = [
+  {
+    label: null,
+    items: [{ label: 'Dashboard', to: '/', icon: LayoutDashboard }],
+  },
+  {
+    label: 'Montar a eleição',
+    items: [
+      { label: 'Assistente guiado', to: '/sessoes/assistente', icon: Wand2, accent: true },
+      { label: 'Eleições', to: '/sessoes', icon: ClipboardList },
+      { label: 'Cargos', to: '/cargos', icon: Briefcase },
+      { label: 'Partidos', to: '/partidos', icon: Flag },
+      { label: 'Pessoas', to: '/pessoas', icon: IdCard },
+      { label: 'Candidatos', to: '/candidatos', icon: Users },
+    ],
+  },
+  {
+    label: 'Dia da votação',
+    items: [
+      { label: 'Votação', to: '/votacao', icon: Vote },
+      { label: 'Resultados', to: '/resultados', icon: BarChart3 },
+      { label: 'Auditoria', to: '/auditoria', icon: ShieldCheck },
+    ],
+  },
+  {
+    label: 'Conteúdo',
+    items: [
+      { label: 'Sistema eleitoral', to: '/sistema-eleitoral', icon: BookOpen },
+      { label: 'Linha do tempo', to: '/linha-do-tempo', icon: History },
+    ],
+  },
 ];
 
-const itemClass = 'flex items-center gap-3 rounded-md px-3 py-2 text-sm';
+function NavItem({ label, to, icon: Icon, accent }) {
+  return (
+    <NavLink
+      to={to}
+      end={to === '/'}
+      className={({ isActive }) =>
+        cn(
+          'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+          accent
+            ? 'bg-accent/15 text-accent font-medium hover:bg-accent/25'
+            : 'text-sidebar-foreground hover:bg-white/10 hover:text-white',
+          isActive && !accent && 'bg-sidebar-accent text-white',
+          isActive && accent && 'bg-accent text-accent-foreground hover:bg-accent',
+        )
+      }
+    >
+      {({ isActive }) => (
+        <>
+          <span
+            className={cn(
+              'absolute inset-y-1 left-0 w-0.5 rounded-full bg-accent opacity-0 transition-opacity',
+              isActive && !accent && 'opacity-100',
+            )}
+            aria-hidden="true"
+          />
+          <Icon className="size-4 shrink-0" />
+          <span className="truncate">{label}</span>
+        </>
+      )}
+    </NavLink>
+  );
+}
 
 export function Sidebar({ collapsed }) {
   if (collapsed) return null;
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
-      <div className="px-5 py-5 text-base font-semibold text-white">Simulador de Eleição</div>
-      <nav className="flex flex-col gap-1 px-3" aria-label="Principal">
-        {NAV_ITEMS.map(({ label, to, icon: Icon }) => (
-          <NavLink
-            key={label}
-            to={to}
-            end={to === '/'}
-            className={({ isActive }) =>
-              cn(itemClass, 'hover:bg-white/10', isActive && 'bg-white/10 text-white')
-            }
-          >
-            <Icon className="size-4" /> {label}
-          </NavLink>
+    <aside className="hidden w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
+      <div className="flex items-center gap-2.5 px-5 py-5">
+        <div className="flex size-8 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+          <Vote className="size-4" />
+        </div>
+        <div className="flex flex-col leading-tight">
+          <span className="text-sm font-semibold text-white">Simulador de Eleição</span>
+          <span className="text-[11px] text-sidebar-foreground/70">Urna eletrônica educacional</span>
+        </div>
+      </div>
+
+      <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-3 pb-4" aria-label="Principal">
+        {NAV_GROUPS.map((group, index) => (
+          <div key={group.label ?? `group-${index}`} className="flex flex-col gap-1">
+            {group.label && (
+              <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+                {group.label}
+              </p>
+            )}
+            {group.items.map((item) => (
+              <NavItem key={item.to} {...item} />
+            ))}
+          </div>
         ))}
       </nav>
-      <p className="mt-auto px-5 py-4 text-xs leading-relaxed opacity-60">
+
+      <p className="px-5 py-4 text-xs leading-relaxed text-sidebar-foreground/50">
         Projeto educacional. Não é uma urna eletrônica oficial.
       </p>
     </aside>
   );
 }
 
-// Navegação compacta para telas pequenas (a sidebar fica oculta abaixo de md).
+// Navegação compacta para telas pequenas (a sidebar fica oculta abaixo de md):
+// mesma ordem dos grupos, com um separador sutil entre eles.
 export function MobileNav() {
   return (
-    <nav className="flex gap-1 overflow-x-auto border-b bg-card px-3 py-2 md:hidden" aria-label="Principal">
-      {NAV_ITEMS.map(({ label, to, icon: Icon }) => (
-        <NavLink
-          key={label}
-          to={to}
-          end={to === '/'}
-          className={({ isActive }) =>
-            cn('flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm', isActive && 'bg-muted font-medium')
-          }
-        >
-          <Icon className="size-4" /> {label}
-        </NavLink>
+    <nav className="flex items-center gap-1 overflow-x-auto border-b bg-card px-3 py-2 md:hidden" aria-label="Principal">
+      {NAV_GROUPS.map((group, groupIndex) => (
+        <div key={group.label ?? `mgroup-${groupIndex}`} className="flex items-center gap-1">
+          {groupIndex > 0 && <span className="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />}
+          {group.items.map(({ label, to, icon: Icon, accent }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/'}
+              className={({ isActive }) =>
+                cn(
+                  'flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-sm',
+                  accent && 'bg-accent/15 font-medium text-accent',
+                  !accent && isActive && 'bg-muted font-medium',
+                )
+              }
+            >
+              <Icon className="size-4" /> {label}
+            </NavLink>
+          ))}
+        </div>
       ))}
     </nav>
   );
