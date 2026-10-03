@@ -117,6 +117,17 @@ precisa entrar de novo com a senha nova. Limitação conhecida (ver `dev.md`): c
 stateless (JWT sem lista de revogação), um token emitido antes do reset continua válido até
 expirar.
 
+### Perfil obrigatório da instituição (Etapa 8.3)
+
+Toda conta — inclusive as criadas antes desta etapa — precisa preencher os dados da instituição
+que representa (nome, endereço, contato e site opcional, `PUT /api/institution-profile`) antes de
+usar qualquer outra parte do sistema. A checagem roda em `server.js` a cada requisição autenticada
+(`middleware/require-institution-profile.js`): sem perfil completo, qualquer rota responde
+`403 INSTITUTION_PROFILE_REQUIRED`, exceto `/api/auth/me` e a própria rota de salvar o perfil
+(marcadas `{ skipProfileCheck: true }` no `Router`, mesmo mecanismo do `{ public: true }` já usado
+pra rotas sem login). O frontend redireciona automaticamente para `/configurar-instituicao`
+nesse caso.
+
 ## Link público de votação
 
 Toda sessão tem um `publicToken` (aleatório, sem relação com o id) desde que criada — sessões mais

@@ -8,6 +8,7 @@ import ConfirmEmail from '@/pages/ConfirmEmail';
 import Dashboard from '@/pages/Dashboard';
 import ElectoralSystem from '@/pages/ElectoralSystem';
 import ForgotPassword from '@/pages/ForgotPassword';
+import InstitutionSetup from '@/pages/InstitutionSetup';
 import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
 import Parties from '@/pages/Parties';
@@ -24,18 +25,34 @@ import SessionWizard from '@/pages/SessionWizard';
 import Timeline from '@/pages/Timeline';
 import Voting from '@/pages/Voting';
 
+function LoadingScreen() {
+  return <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">Carregando...</div>;
+}
+
 // Só deixa passar com sessão confirmada; sem ela, manda pro login (e lembra de
-// onde a pessoa estava, pra voltar depois de entrar).
+// onde a pessoa estava, pra voltar depois de entrar). Com sessão mas sem o perfil da
+// instituição completo, manda pra tela de configuração obrigatória.
 function RequireAuth({ children }) {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
   const location = useLocation();
 
-  if (status === 'loading') {
-    return <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">Carregando...</div>;
-  }
+  if (status === 'loading') return <LoadingScreen />;
   if (status !== 'authenticated') {
     return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
   }
+  if (!user?.institutionProfileComplete) {
+    return <Navigate to="/configurar-instituicao" replace />;
+  }
+  return children;
+}
+
+// Mesma checagem de sessão do RequireAuth, mas sem exigir o perfil completo — é a
+// própria tela que o completa.
+function RequireAuthOnly({ children }) {
+  const { status } = useAuth();
+
+  if (status === 'loading') return <LoadingScreen />;
+  if (status !== 'authenticated') return <Navigate to="/login" replace />;
   return children;
 }
 
@@ -49,6 +66,10 @@ export default function App() {
         <Route path="confirmar-email" element={<ConfirmEmail />} />
         <Route path="esqueci-senha" element={<ForgotPassword />} />
         <Route path="redefinir-senha/:token" element={<ResetPassword />} />
+        <Route
+          path="configurar-instituicao"
+          element={<RequireAuthOnly><InstitutionSetup /></RequireAuthOnly>}
+        />
         <Route path="votar/:token" element={<PublicVoting />} />
         <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
           <Route path="painel" element={<Dashboard />} />

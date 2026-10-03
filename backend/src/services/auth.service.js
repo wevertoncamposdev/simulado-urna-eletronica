@@ -1,6 +1,7 @@
 import { randomInt, createHash } from 'node:crypto';
 import { config } from '../config.js';
 import { emailVerificationRepository } from '../repositories/email-verification.repository.js';
+import { institutionProfileRepository } from '../repositories/institution-profile.repository.js';
 import { passwordResetRepository } from '../repositories/password-reset.repository.js';
 import { positionRepository } from '../repositories/position.repository.js';
 import { userRepository } from '../repositories/user.repository.js';
@@ -64,13 +65,19 @@ function assertPassword(value) {
   }
 }
 
-const sanitize = (user) => ({
-  id: user.id,
-  name: user.name,
-  email: user.email,
-  emailVerified: Boolean(user.emailVerifiedAt),
-  createdAt: user.createdAt,
-});
+// Perfil da instituição não entra no JWT — pode ser completado depois do token já
+// emitido, sem precisar de novo login. Por isso é consultado aqui a cada resposta que
+// devolve o usuário, igual ao gate em middleware/require-institution-profile.js.
+async function sanitize(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    emailVerified: Boolean(user.emailVerifiedAt),
+    institutionProfileComplete: Boolean(await institutionProfileRepository.findByUserId(user.id)),
+    createdAt: user.createdAt,
+  };
+}
 
 function issueToken(user) {
   return signJwt({ sub: user.id });
@@ -121,7 +128,7 @@ export const authService = {
     await seedDefaultPositions(result.record.id);
     await issueVerificationCode(result.record);
 
-    return { user: sanitize(result.record) };
+    return { user: await sanitize(result.record) };
   },
 
   async login(input) {
@@ -139,7 +146,7 @@ export const authService = {
       throw forbidden('EMAIL_NOT_VERIFIED', 'Confirme seu e-mail antes de entrar.');
     }
 
-    return { user: sanitize(user), token: issueToken(user) };
+    return { user: await sanitize(user), token: issueToken(user) };
   },
 
   async verifyEmail(input) {
@@ -170,7 +177,7 @@ export const authService = {
     const verifiedUser = await userRepository.markEmailVerified(user.id);
     await emailVerificationRepository.deleteByUserId(user.id);
 
-    return { user: sanitize(verifiedUser), token: issueToken(verifiedUser) };
+    return { user: await sanitize(verifiedUser), token: issueToken(verifiedUser) };
   },
 
   async resendVerification(input) {
@@ -246,6 +253,6 @@ export const authService = {
   async me(userId) {
     const user = await userRepository.findById(userId);
     if (!user) throw notFound('USER_NOT_FOUND', 'Usuário não encontrado.');
-    return sanitize(user);
+    return await sanitize(user);
   },
 };

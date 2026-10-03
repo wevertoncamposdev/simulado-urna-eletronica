@@ -7,5 +7,5 @@ export function registerAuthRoutes(router) {
   router.post('/api/auth/resend-verification', authController.resendVerification, { public: true });
   router.post('/api/auth/forgot-password', authController.forgotPassword, { public: true });
   router.post('/api/auth/reset-password', authController.resetPassword, { public: true });
-  router.get('/api/auth/me', authController.me);
+  router.get('/api/auth/me', authController.me, { skipProfileCheck: true });
 }

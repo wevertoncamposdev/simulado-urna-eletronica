@@ -4,6 +4,7 @@ import { createRouter } from './routes/index.js';
 import { applyCors } from './middleware/cors.js';
 import { handleError } from './middleware/error-handler.js';
 import { servePhoto } from './middleware/photo-static.js';
+import { isInstitutionProfileComplete } from './middleware/require-institution-profile.js';
 import { readJsonBody, sendError } from './utils/http.js';
 import { verifyJwt } from './utils/jwt.js';
 
@@ -34,6 +35,15 @@ async function handleRequest(req, res) {
         return sendError(res, 401, 'UNAUTHORIZED', 'Faça login para continuar.');
       }
       userId = payload.sub;
+
+      if (!match.skipProfileCheck && !(await isInstitutionProfileComplete(userId))) {
+        return sendError(
+          res,
+          403,
+          'INSTITUTION_PROFILE_REQUIRED',
+          'Complete o perfil da instituição antes de continuar.',
+        );
+      }
     }
 
     const hasBody = ['POST', 'PUT', 'PATCH'].includes(req.method);

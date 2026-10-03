@@ -27,6 +27,12 @@ incompatíveis sem aviso extra, como é comum nessa faixa de versão.
   30 minutos e de uso único (`POST /api/auth/reset-password`). A resposta de `forgot-password` é
   **sempre igual**, exista ou não o e-mail — não revela quais e-mails têm conta. Depois de
   redefinir, é preciso logar de novo com a senha nova (sem login automático).
+- **Perfil obrigatório da instituição (Etapa 8.3)**: toda conta (inclusive as já existentes)
+  precisa preencher nome, endereço, contato e site (opcional) da instituição antes de usar o
+  resto do sistema. Qualquer rota autenticada responde `403 INSTITUTION_PROFILE_REQUIRED`
+  enquanto o perfil não estiver completo (exceto `/api/auth/me` e a própria
+  `PUT /api/institution-profile`); o frontend redireciona automaticamente para
+  `/configurar-instituicao` nesse caso.
 
 ## [0.12.0] — 2026-10-02
 

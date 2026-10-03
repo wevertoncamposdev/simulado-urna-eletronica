@@ -107,6 +107,10 @@ export const api = {
     me: () => request('/api/auth/me'),
   },
 
+  institutionProfile: {
+    save: (data) => request('/api/institution-profile', { method: 'PUT', body: data }),
+  },
+
   positions: {
     list: () => request('/api/positions'),
     create: (data) => request('/api/positions', { method: 'POST', body: data }),

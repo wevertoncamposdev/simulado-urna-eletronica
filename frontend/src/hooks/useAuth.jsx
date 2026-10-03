@@ -63,6 +63,14 @@ export function AuthProvider({ children }) {
     [],
   );
 
+  // Busca o usuário de novo (ex.: depois de salvar o perfil da instituição) — o dado
+  // pode ter mudado sem um novo login, então o token continua o mesmo.
+  const refreshUser = useCallback(async () => {
+    const freshUser = await api.auth.me();
+    setUser(freshUser);
+    return freshUser;
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -73,9 +81,21 @@ export function AuthProvider({ children }) {
       resendVerification,
       forgotPassword,
       resetPassword,
+      refreshUser,
       logout,
     }),
-    [user, status, login, register, verifyEmail, resendVerification, forgotPassword, resetPassword, logout],
+    [
+      user,
+      status,
+      login,
+      register,
+      verifyEmail,
+      resendVerification,
+      forgotPassword,
+      resetPassword,
+      refreshUser,
+      logout,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
